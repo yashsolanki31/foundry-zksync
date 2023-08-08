@@ -469,6 +469,7 @@ dependencies = [
  "futures 0.3.28",
  "hash-db",
  "hyper",
+ "itertools",
  "memory-db",
  "parking_lot 0.12.1",
  "pretty_assertions",
