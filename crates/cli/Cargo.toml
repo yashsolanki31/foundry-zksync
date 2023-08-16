@@ -116,6 +116,9 @@ solc-asm = ["ethers/solc-sha2-asm"]
 # feature for integration tests that test external projects
 external-integration-tests = []
 
+# feature for heavy (long-running) integration tests
+heavy-integration-tests = []
+
 [[bin]]
 doc = false
 name = "zkcast"
