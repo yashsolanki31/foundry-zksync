@@ -65,6 +65,7 @@ pub enum Subcommands {
     #[clap(
         visible_aliases = &[
         "--from-ascii",
+        "--from-utf8",
         "from-ascii",
         "fu",
         "fa"]
