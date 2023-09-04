@@ -4134,6 +4134,7 @@ dependencies = [
 name = "foundry-common"
 version = "0.2.0"
 dependencies = [
+ "async-trait",
  "auto_impl",
  "clap 4.3.23",
  "comfy-table",
@@ -4157,6 +4158,7 @@ dependencies = [
  "thiserror",
  "tokio",
  "tracing",
+ "url",
  "walkdir",
  "yansi 0.5.1",
 ]
