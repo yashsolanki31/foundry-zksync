@@ -20,6 +20,8 @@ revm = {  git = "https://github.com/mm-zk/revm.git", branch = "release_v25_with_
   "memory_limit",
 ] }
 
+
+alloy-primitives = { workspace = true, default-features = false, features = ["std", "serde"] }
 ethers-core.workspace = true
 serde = { version = "1", features = ["derive"], optional = true }
 serde_json = "1"
