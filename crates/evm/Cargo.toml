@@ -47,6 +47,7 @@ revm = {  git = "https://github.com/mm-zk/revm.git", branch = "release_v25_with_
   "optional_eip3607",
   "optional_block_gas_limit",
   "optional_no_base_fee",
+  "arbitrary"
 ] }
 
 era_revm = { git = "https://github.com/matter-labs/era-revm.git", rev = "792cb820587eccdc35bbecb45f343cf1b891b6d2"}
