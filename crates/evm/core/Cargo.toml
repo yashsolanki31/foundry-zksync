@@ -52,6 +52,18 @@ parking_lot = "0.12"
 futures = "0.3"
 once_cell = "1"
 
+# EVM
+bytes = "1"
+hashbrown = { version = "0.14", features = ["serde"] }
+
+era_revm = { git = "https://github.com/matter-labs/era-revm.git", tag = "v0.0.1-alpha" }
+
+# Fuzzer
+proptest = "1"
+
+# Display
+yansi = "0.5"
+
 # Misc
 url = "2"
 itertools.workspace = true
