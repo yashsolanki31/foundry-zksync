@@ -226,6 +226,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4b46cbb362ab8752921c97e041f5e366ee6297bd428a31275b9fcf1e380f7299"
 
 [[package]]
+name = "ansi_term"
+version = "0.12.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d52a9bb7ec0cf484c551830a7ce27bd20d67eac647e1befb56b0be4ee39a55d2"
+dependencies = [
+ "winapi",
+]
+
+[[package]]
 name = "anstream"
 version = "0.6.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -7938,6 +7947,131 @@ dependencies = [
  "sha1",
  "time",
  "zstd",
+]
+
+[[package]]
+name = "zkcast"
+version = "0.2.0"
+dependencies = [
+ "ansi_term",
+ "anyhow",
+ "async-trait",
+ "chrono",
+ "clap",
+ "clap_complete",
+ "clap_complete_fig",
+ "comfy-table",
+ "const-hex",
+ "criterion",
+ "dirs 5.0.1",
+ "dunce",
+ "eth-keystore",
+ "ethabi",
+ "ethers",
+ "ethers-core",
+ "ethers-etherscan",
+ "ethers-providers",
+ "evm-disassembler",
+ "eyre",
+ "foundry-cli",
+ "foundry-common",
+ "foundry-config",
+ "foundry-evm",
+ "foundry-test-utils",
+ "foundry-utils",
+ "futures",
+ "indicatif",
+ "itertools 0.11.0",
+ "rayon",
+ "regex",
+ "rpassword",
+ "rusoto_core",
+ "rusoto_kms",
+ "semver 1.0.20",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "tokio",
+ "tracing",
+ "uint",
+ "url",
+ "vergen",
+ "yansi 0.5.1",
+ "zksync-web3-rs",
+]
+
+[[package]]
+name = "zkforge"
+version = "0.2.0"
+dependencies = [
+ "alloy-primitives",
+ "anvil",
+ "async-trait",
+ "clap",
+ "clap_complete",
+ "clap_complete_fig",
+ "comfy-table",
+ "const-hex",
+ "criterion",
+ "dialoguer",
+ "dunce",
+ "ethers",
+ "eyre",
+ "forge-doc",
+ "forge-fmt",
+ "foundry-cli",
+ "foundry-common",
+ "foundry-config",
+ "foundry-debugger",
+ "foundry-evm",
+ "foundry-test-utils",
+ "foundry-utils",
+ "futures",
+ "globset",
+ "indicatif",
+ "itertools 0.11.0",
+ "once_cell",
+ "parking_lot",
+ "path-slash",
+ "pretty_assertions",
+ "proptest",
+ "rayon",
+ "regex",
+ "reqwest",
+ "semver 1.0.20",
+ "serde",
+ "serde_json",
+ "serial_test",
+ "similar",
+ "solang-parser",
+ "strum 0.25.0",
+ "svm-rs",
+ "thiserror",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
+ "vergen",
+ "watchexec",
+ "yansi 0.5.1",
+]
+
+[[package]]
+name = "zksync-web3-rs"
+version = "0.1.0"
+source = "git+https://github.com/lambdaclass/zksync-web3-rs.git?rev=70327ae5413c517bd4d27502507cdd96ee40cd22#70327ae5413c517bd4d27502507cdd96ee40cd22"
+dependencies = [
+ "async-trait",
+ "clap",
+ "env_logger",
+ "ethers",
+ "ethers-contract",
+ "hex",
+ "log",
+ "serde",
+ "serde_json",
+ "sha2 0.9.9",
+ "thiserror",
+ "tokio",
 ]
 
 [[package]]

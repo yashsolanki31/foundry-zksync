@@ -118,8 +118,10 @@ codegen-units = 16
 [workspace.dependencies]
 anvil = { path = "crates/anvil" }
 cast = { path = "crates/cast" }
+zkcast = { path = "crates/zkcast" }
 chisel = { path = "crates/chisel" }
 forge = { path = "crates/forge" }
+zkforge = { path = "crates/zkforge" }
 
 forge-doc = { path = "crates/doc" }
 forge-fmt = { path = "crates/fmt" }
