@@ -68,5 +68,5 @@ pub mod verify;
 pub mod watch;
 pub mod zk_build;
 pub mod zk_create;
-pub mod zksolc;
+pub mod zk_solc;
 pub mod zksolc_manager;

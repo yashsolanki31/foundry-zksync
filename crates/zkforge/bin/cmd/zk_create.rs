@@ -44,14 +44,12 @@
 /// Ethereum and zkSync:
 /// - `ethers`
 /// - `zksync`
-use crate::{
-    cmd::{
-        cast::zk_utils::{get_chain, get_private_key, get_rpc_url},
-        forge::build::CoreBuildArgs,
-        read_constructor_args_file,
-    },
-    opts::{EthereumOpts, TransactionOpts},
+use foundry_cli::{
+    opts::{CoreBuildArgs, EthereumOpts, EtherscanOpts, TransactionOpts},
+    utils::{self, read_constructor_args_file, remove_contract, LoadConfig},
 };
+use crate::zkcast::zk_utils::{get_chain, get_private_key, get_rpc_url};
+
 use clap::{Parser, ValueHint};
 use ethers::{
     abi::Abi,

@@ -1,9 +1,10 @@
-use super::{install, test::filter::ProjectPathsAwareFilter, watch::WatchArgs};
+use super::{install, test::filter::ProjectPathsAwareFilter, watch::WatchArgs, zksolc::{ZkSolc, ZkSolcOpts},
+zksolc_manager::{ZkSolcManagerBuilder, ZkSolcManagerOpts, DEFAULT_ZKSOLC_VERSION}};
 use alloy_primitives::U256;
 use clap::Parser;
 
 use eyre::Result;
-use forge::{
+use zkforge::{
     decode::decode_console_logs,
     executor::inspector::CheatsConfig,
     gas_report::GasReport,
@@ -50,7 +51,7 @@ pub use filter::FilterArgs;
 foundry_config::merge_impl_figment_convert!(TestArgs, opts, evm_opts);
 
 /// CLI arguments for `forge test`.
-#[derive(Debug, Clone, Parser)]
+#[derive(Debug, Clone, Parser, Default)]
 #[clap(next_help_heading = "Test options")]
 pub struct TestArgs {
     /// Run a test in the debugger.
@@ -173,6 +174,20 @@ impl TestArgs {
         let project_root = &project.paths.root;
         let toml = config.get_config_path();
         let profiles = get_available_profiles(toml)?;
+
+        let zksolc_manager =
+            ZkSolcManagerBuilder::new(ZkSolcManagerOpts::new(DEFAULT_ZKSOLC_VERSION.to_owned()))
+                .build()
+                .unwrap();
+
+        let zksolc_opts = ZkSolcOpts {
+            compiler_path: zksolc_manager.get_full_compiler_path(),
+            is_system: false,
+            force_evmla: false,
+        };
+
+        let mut zksolc = ZkSolc::new(zksolc_opts, project);
+        let output = zksolc.compile().unwrap();
 
         let test_options: TestOptions = TestOptionsBuilder::default()
             .fuzz(config.fuzz)

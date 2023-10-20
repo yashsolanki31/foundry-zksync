@@ -1,4 +1,4 @@
-use cast::SimpleCast;
+use zkcast::SimpleCast;
 use clap::{builder::TypedValueParser, Parser};
 use ethers::{
     core::{k256::ecdsa::SigningKey, rand::thread_rng},
