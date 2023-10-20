@@ -25,14 +25,13 @@
 /// zkSync contracts. It is designed to provide a seamless experience for developers, providing
 /// an easy-to-use interface for contract compilation while taking care of the underlying
 /// complexities.
-use super::build::CoreBuildArgs;
+use foundry_cli::{opts::CoreBuildArgs, utils::LoadConfig};
 use super::{
-    zksolc::{ZkSolc, ZkSolcOpts},
+    zk_solc::{ZkSolc, ZkSolcOpts},
     zksolc_manager::{
         ZkSolcManager, ZkSolcManagerBuilder, ZkSolcManagerOpts, DEFAULT_ZKSOLC_VERSION,
     },
 };
-use crate::cmd::{Cmd, LoadConfig};
 use clap::Parser;
 use ethers::prelude::Project;
 use foundry_config::{
@@ -118,9 +117,7 @@ pub struct ZkBuildArgs {
     pub args: CoreBuildArgs,
 }
 
-impl Cmd for ZkBuildArgs {
-    type Output = ();
-
+impl ZkBuildArgs {
     /// Executes the zkSync contract compilation process based on the parameters encapsulated in the
     /// `ZkBuildArgs` instance.
     ///
@@ -216,7 +213,7 @@ impl ZkBuildArgs {
             force_evmla: self.force_evmla,
         };
 
-        let zksolc = ZkSolc::new(zksolc_opts, project);
+        let mut zksolc = ZkSolc::new(zksolc_opts, project);
 
         match zksolc.compile() {
             Ok(_) => {

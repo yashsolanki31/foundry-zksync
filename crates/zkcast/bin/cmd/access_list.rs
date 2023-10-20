@@ -1,4 +1,4 @@
-use cast::{Cast, TxBuilder};
+use zkcast::{Cast, TxBuilder};
 use clap::Parser;
 use ethers::{
     providers::Middleware,

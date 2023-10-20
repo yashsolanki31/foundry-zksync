@@ -49,6 +49,8 @@ revm = { workspace = true, default-features = false, features = [
   "optional_no_base_fee",
   "arbitrary",
 ] }
+
+# era_revm = { git = "https://github.com/matter-labs/era-revm.git", branch = "main"}
 alloy-primitives = { workspace = true, features = ["serde", "getrandom", "arbitrary", "rlp"] }
 alloy-dyn-abi = { workspace = true, features = ["arbitrary"] }
 
