@@ -1,5 +1,5 @@
 use crate::opts::parse_slot;
-use cast::Cast;
+use zkcast::Cast;
 use clap::Parser;
 use comfy_table::{presets::ASCII_MARKDOWN, Table};
 use ethers::{

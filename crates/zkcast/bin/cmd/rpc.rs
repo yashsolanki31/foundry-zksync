@@ -1,4 +1,4 @@
-use cast::Cast;
+use zkcast::Cast;
 use clap::Parser;
 use eyre::Result;
 use foundry_cli::{opts::RpcOpts, utils};
