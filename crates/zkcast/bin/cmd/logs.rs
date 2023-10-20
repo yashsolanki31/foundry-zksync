@@ -1,6 +1,6 @@
 use std::{io, str::FromStr};
 
-use cast::Cast;
+use zkcast::Cast;
 use clap::Parser;
 use ethers::{providers::Middleware, types::NameOrAddress};
 use ethers_core::{

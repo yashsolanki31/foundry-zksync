@@ -1,4 +1,4 @@
-use cast::{AbiPath, SimpleCast};
+use zkcast::{AbiPath, SimpleCast};
 use clap::Parser;
 use eyre::Result;
 use foundry_cli::opts::EtherscanOpts;

@@ -13,7 +13,7 @@
 ///       specified.
 ///     - `parse_decimal_u256`: Converts a string to a `U256` number.
 use crate::{
-    cmd::cast::zk_utils::{get_chain, get_private_key, get_rpc_url, get_url_with_port},
+    cmd::zkcast::zk_utils::{get_chain, get_private_key, get_rpc_url, get_url_with_port},
     opts::{TransactionOpts, Wallet},
 };
 use clap::Parser;

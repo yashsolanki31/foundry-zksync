@@ -1,4 +1,4 @@
-use cast::Cast;
+use zkcast::Cast;
 use clap::Parser;
 use ethers::prelude::*;
 use eyre::Result;

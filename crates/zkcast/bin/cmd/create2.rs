@@ -1,4 +1,4 @@
-use cast::SimpleCast;
+use zkcast::SimpleCast;
 use clap::Parser;
 use ethers::{
     core::rand::thread_rng,
