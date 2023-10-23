@@ -2,7 +2,7 @@ use super::*;
 use alloy_primitives::{Address, Bytes, U256};
 use ethers::types::NameOrAddress;
 use eyre::Result;
-use forge::{
+use zkforge::{
     executor::{CallResult, DeployResult, EvmError, ExecutionErr, Executor, RawCallResult},
     revm::interpreter::{return_ok, InstructionResult},
     trace::{TraceKind, Traces},

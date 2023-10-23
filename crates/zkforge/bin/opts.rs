@@ -63,10 +63,6 @@ pub enum Subcommands {
     #[clap(alias = "bi")]
     Bind(BindArgs),
 
-    /// Build the project's smart contracts.
-    #[clap(visible_aliases = ["b", "compile"])]
-    Build(BuildArgs),
-
     /// Debugs a single smart contract as a script.
     #[clap(visible_alias = "d")]
     Debug(DebugArgs),
@@ -98,10 +94,6 @@ pub enum Subcommands {
     /// Check verification status on Etherscan.
     #[clap(visible_alias = "vc")]
     VerifyCheck(VerifyCheckArgs),
-
-    /// Deploy a smart contract.
-    #[clap(visible_alias = "c")]
-    Create(CreateArgs),
 
     /// Create a new Forge project.
     Init(InitArgs),

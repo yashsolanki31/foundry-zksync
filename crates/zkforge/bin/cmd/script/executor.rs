@@ -9,7 +9,7 @@ use ethers::{
     solc::artifacts::CompactContractBytecode, types::transaction::eip2718::TypedTransaction,
 };
 use eyre::Result;
-use forge::{
+use zkforge::{
     executor::{
         inspector::{cheatcodes::util::BroadcastableTransactions, CheatsConfig},
         Backend, ExecutorBuilder,
@@ -17,6 +17,7 @@ use forge::{
     revm::primitives::U256 as rU256,
     trace::{CallTraceDecoder, Traces},
     CallKind,
+    revm::primitives::SpecId,
 };
 use foundry_cli::utils::{ensure_clean_constructor, needs_setup};
 use foundry_common::{shell, RpcUrl};
@@ -317,7 +318,7 @@ impl ScriptArgs {
         // We need to enable tracing to decode contract names: local or external.
         let mut builder = ExecutorBuilder::new()
             .inspectors(|stack| stack.trace(true))
-            .spec(script_config.config.evm_spec_id())
+            .spec(SpecId::LATEST)
             .gas_limit(script_config.evm_opts.gas_limit());
 
         if let SimulationStage::Local = stage {

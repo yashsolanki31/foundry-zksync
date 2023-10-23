@@ -33,7 +33,7 @@ futures = { version = "0.3", optional = true }
 hex = { workspace = true, optional = true }
 itertools = { workspace = true, optional = true }
 jsonpath_lib = { workspace = true, optional = true }
-revm = { workspace = true, optional = true }
+revm = { git = "https://github.com/dutterbutter/revm.git", branch = "db/release_v26_sha3_0.10.6", default-features = false, optional = true }
 thiserror = { version = "1", optional = true }
 tracing = { workspace = true, optional = true }
 walkdir = { version = "2", optional = true }

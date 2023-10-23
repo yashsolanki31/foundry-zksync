@@ -2,7 +2,7 @@
 
 use crate::{config::*, test_helpers::filter::Filter};
 use ethers::types::U256;
-use forge::result::{SuiteResult, TestStatus};
+use zkforge::result::{SuiteResult, TestStatus};
 use std::collections::BTreeMap;
 
 #[tokio::test(flavor = "multi_thread")]

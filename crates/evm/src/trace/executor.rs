@@ -1,7 +1,7 @@
 use crate::executor::{fork::CreateFork, opts::EvmOpts, Backend, Executor, ExecutorBuilder};
 use ethers::solc::EvmVersion;
 use foundry_config::{utils::evm_spec_id, Config};
-use revm::primitives::Env;
+use revm::primitives::{Env, SpecId};
 use std::ops::{Deref, DerefMut};
 
 /// A default executor with tracing enabled
@@ -22,7 +22,7 @@ impl TracingExecutor {
             // tracing will be enabled only for the targeted transaction
             executor: ExecutorBuilder::new()
                 .inspectors(|stack| stack.trace(true).debug(debug))
-                .spec(evm_spec_id(&version.unwrap_or_default()))
+                .spec(SpecId::SHANGHAI)
                 .build(env, db),
         }
     }

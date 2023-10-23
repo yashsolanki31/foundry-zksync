@@ -1,4 +1,4 @@
-use cast::{Cast, SimpleCast};
+use zkcast::{Cast, SimpleCast};
 use clap::{CommandFactory, Parser};
 use clap_complete::generate;
 use ethers::{

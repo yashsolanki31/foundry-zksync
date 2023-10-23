@@ -9,7 +9,7 @@ use ethers::{
     solc::{artifacts::contract::CompactContractBytecode, sourcemap::SourceMap},
 };
 use eyre::{Context, Result};
-use forge::{
+use zkforge::{
     coverage::{
         analysis::SourceAnalyzer, anchors::find_anchors, ContractId, CoverageReport,
         CoverageReporter, DebugReporter, ItemAnchor, LcovReporter, SummaryReporter,
@@ -300,7 +300,7 @@ impl CoverageArgs {
         let env = evm_opts.evm_env().await?;
         let mut runner = MultiContractRunnerBuilder::default()
             .initial_balance(evm_opts.initial_balance)
-            .evm_spec(config.evm_spec_id())
+            .evm_spec(SpecId::LATEST)
             .sender(evm_opts.sender)
             .with_fork(evm_opts.get_fork(&config, env.clone()))
             .with_cheats_config(CheatsConfig::new(&config, &evm_opts))

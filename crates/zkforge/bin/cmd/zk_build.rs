@@ -25,6 +25,7 @@
 /// zkSync contracts. It is designed to provide a seamless experience for developers, providing
 /// an easy-to-use interface for contract compilation while taking care of the underlying
 /// complexities.
+use super::{install, watch::WatchArgs};
 use foundry_cli::{opts::CoreBuildArgs, utils::LoadConfig};
 use super::{
     zk_solc::{ZkSolc, ZkSolcOpts},
@@ -47,6 +48,7 @@ use serde::Serialize;
 use std::fmt::Debug;
 
 foundry_config::merge_impl_figment_convert!(ZkBuildArgs, args);
+use watchexec::config::{InitConfig, RuntimeConfig};
 
 /// The `ZkBuildArgs` struct encapsulates the parameters required for the zkSync contract
 /// compilation process.
@@ -115,6 +117,10 @@ pub struct ZkBuildArgs {
     #[clap(flatten)]
     #[serde(flatten)]
     pub args: CoreBuildArgs,
+
+    #[clap(flatten)]
+    #[serde(skip)]
+    pub watch: WatchArgs,
 }
 
 impl ZkBuildArgs {
@@ -141,7 +147,7 @@ impl ZkBuildArgs {
     /// step in the process fails. The purpose of this function is to consolidate all steps
     /// involved in the zkSync contract compilation process in a single method, allowing for
     /// easy invocation of the process with a single function call.
-    fn run(self) -> eyre::Result<()> {
+    pub fn run(self) -> eyre::Result<()> {
         let config = self.try_load_config_emit_warnings()?;
         let mut project = config.project()?;
 
@@ -154,9 +160,19 @@ impl ZkBuildArgs {
         println!("Compiling smart contracts...");
         self.compile_smart_contracts(zksolc_manager, project)
     }
-}
-
-impl ZkBuildArgs {
+    /// Returns whether `ZkBuildArgs` was configured with `--watch`
+    pub fn _is_watch(&self) -> bool {
+        self.watch.watch.is_some()
+    }
+    /// Returns the [`watchexec::InitConfig`] and [`watchexec::RuntimeConfig`] necessary to
+    /// bootstrap a new [`watchexe::Watchexec`] loop.
+    // pub(crate) fn watchexec_config(&self) -> Result<(InitConfig, RuntimeConfig)> {
+    //     // use the path arguments or if none where provided the `src` dir
+    //     self.watch.watchexec_config(|| {
+    //         let config = Config::from(self);
+    //         vec![config.src, config.test, config.script]
+    //     })
+    // }
     /// The `setup_zksolc_manager` function creates and prepares an instance of `ZkSolcManager`.
     ///
     /// It follows these steps:
