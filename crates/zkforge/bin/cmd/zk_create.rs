@@ -45,8 +45,8 @@
 /// - `ethers`
 /// - `zksync`
 use foundry_cli::{
-    opts::{CoreBuildArgs, EthereumOpts, EtherscanOpts, TransactionOpts},
-    utils::{self, read_constructor_args_file, remove_contract, LoadConfig},
+    opts::{CoreBuildArgs, EthereumOpts, TransactionOpts},
+    utils::{read_constructor_args_file},
 };
 use foundry_common::zk_utils::{get_chain, get_private_key, get_rpc_url};
 use clap::{Parser, ValueHint};

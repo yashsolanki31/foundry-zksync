@@ -25,7 +25,7 @@
 /// zkSync contracts. It is designed to provide a seamless experience for developers, providing
 /// an easy-to-use interface for contract compilation while taking care of the underlying
 /// complexities.
-use super::{install, watch::WatchArgs};
+use super::{watch::WatchArgs};
 use foundry_cli::{opts::CoreBuildArgs, utils::LoadConfig};
 use super::{
     zk_solc::{ZkSolc, ZkSolcOpts},
@@ -48,7 +48,7 @@ use serde::Serialize;
 use std::fmt::Debug;
 
 foundry_config::merge_impl_figment_convert!(ZkBuildArgs, args);
-use watchexec::config::{InitConfig, RuntimeConfig};
+
 
 /// The `ZkBuildArgs` struct encapsulates the parameters required for the zkSync contract
 /// compilation process.

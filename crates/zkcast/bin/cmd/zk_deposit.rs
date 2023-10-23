@@ -13,7 +13,7 @@
 ///       specified.
 ///     - `parse_decimal_u256`: Converts a string to a `U256` number.
 use foundry_cli::{
-    opts::{EthereumOpts, TransactionOpts, Wallet},
+    opts::{TransactionOpts, Wallet},
 };
 use foundry_common::zk_utils::{get_chain, get_private_key, get_rpc_url, get_url_with_port};
 use clap::Parser;
