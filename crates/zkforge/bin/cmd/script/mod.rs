@@ -17,17 +17,6 @@ use ethers::{
     },
 };
 use eyre::{ContextCompat, Result, WrapErr};
-use zkforge::{
-    debug::DebugArena,
-    decode::decode_console_logs,
-    executor::{opts::EvmOpts, Backend},
-    trace::{
-        identifier::{EtherscanIdentifier, LocalTraceIdentifier, SignaturesIdentifier},
-        CallTraceDecoder, CallTraceDecoderBuilder, RawOrDecodedCall, RawOrDecodedReturnData,
-        TraceKind, Traces,
-    },
-    CallKind,
-};
 use foundry_cli::opts::MultiWallet;
 use foundry_common::{
     abi::{encode_args, format_token},
@@ -56,6 +45,17 @@ use futures::future;
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap, HashSet, VecDeque};
 use yansi::Paint;
+use zkforge::{
+    debug::DebugArena,
+    decode::decode_console_logs,
+    executor::{opts::EvmOpts, Backend},
+    trace::{
+        identifier::{EtherscanIdentifier, LocalTraceIdentifier, SignaturesIdentifier},
+        CallTraceDecoder, CallTraceDecoderBuilder, RawOrDecodedCall, RawOrDecodedReturnData,
+        TraceKind, Traces,
+    },
+    CallKind,
+};
 
 mod artifacts;
 mod broadcast;

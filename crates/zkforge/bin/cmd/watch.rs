@@ -1,4 +1,4 @@
-use super::{zk_build::ZkBuildArgs, snapshot::SnapshotArgs, test::TestArgs};
+use super::{snapshot::SnapshotArgs, test::TestArgs};
 use clap::Parser;
 use eyre::Result;
 use foundry_cli::utils::{self, FoundryPathExt};

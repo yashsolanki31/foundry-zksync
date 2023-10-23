@@ -1,10 +1,10 @@
-use zkcast::Cast;
 use clap::Parser;
 use ethers::prelude::*;
 use eyre::Result;
 use foundry_cli::{opts::RpcOpts, utils};
 use foundry_config::Config;
 use futures::join;
+use zkcast::Cast;
 
 /// CLI arguments for `cast find-block`.
 #[derive(Debug, Clone, Parser)]

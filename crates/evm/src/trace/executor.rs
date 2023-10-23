@@ -1,6 +1,6 @@
 use crate::executor::{fork::CreateFork, opts::EvmOpts, Backend, Executor, ExecutorBuilder};
 use ethers::solc::EvmVersion;
-use foundry_config::{utils::evm_spec_id, Config};
+use foundry_config::Config;
 use revm::primitives::{Env, SpecId};
 use std::ops::{Deref, DerefMut};
 
@@ -13,7 +13,7 @@ impl TracingExecutor {
     pub async fn new(
         env: revm::primitives::Env,
         fork: Option<CreateFork>,
-        version: Option<EvmVersion>,
+        _version: Option<EvmVersion>,
         debug: bool,
     ) -> Self {
         let db = Backend::spawn(fork).await;

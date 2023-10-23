@@ -1,4 +1,3 @@
-use zkcast::{Cast, TxBuilder};
 use clap::Parser;
 use ethers::{
     solc::EvmVersion,
@@ -14,6 +13,7 @@ use foundry_config::{find_project_root_path, Config};
 use foundry_evm::{executor::opts::EvmOpts, trace::TracingExecutor};
 use foundry_utils::types::ToAlloy;
 use std::str::FromStr;
+use zkcast::{Cast, TxBuilder};
 
 type Provider = ethers::providers::Provider<RuntimeClient>;
 

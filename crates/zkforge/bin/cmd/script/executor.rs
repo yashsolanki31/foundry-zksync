@@ -9,16 +9,6 @@ use ethers::{
     solc::artifacts::CompactContractBytecode, types::transaction::eip2718::TypedTransaction,
 };
 use eyre::Result;
-use zkforge::{
-    executor::{
-        inspector::{cheatcodes::util::BroadcastableTransactions, CheatsConfig},
-        Backend, ExecutorBuilder,
-    },
-    revm::primitives::U256 as rU256,
-    trace::{CallTraceDecoder, Traces},
-    CallKind,
-    revm::primitives::SpecId,
-};
 use foundry_cli::utils::{ensure_clean_constructor, needs_setup};
 use foundry_common::{shell, RpcUrl};
 use foundry_utils::types::ToEthers;
@@ -26,6 +16,15 @@ use futures::future::join_all;
 use parking_lot::RwLock;
 use std::{collections::VecDeque, sync::Arc};
 use tracing::trace;
+use zkforge::{
+    executor::{
+        inspector::{cheatcodes::util::BroadcastableTransactions, CheatsConfig},
+        Backend, ExecutorBuilder,
+    },
+    revm::primitives::{SpecId, U256 as rU256},
+    trace::{CallTraceDecoder, Traces},
+    CallKind,
+};
 
 /// Helper alias type for the processed result of a runner onchain simulation.
 type RunnerResult = (Option<TransactionWithMetadata>, Traces);

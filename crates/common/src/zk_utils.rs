@@ -1,4 +1,4 @@
-/// The `zk_utils` module provides utility functions specifically designed for interacting with
+//! The `zk_utils` module provides utility functions specifically designed for interacting with
 /// zkSync, an Ethereum layer 2 scaling solution.
 ///
 /// This module encapsulates various functionalities related to zkSync, including retrieving

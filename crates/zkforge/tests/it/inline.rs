@@ -2,11 +2,11 @@ use crate::{
     config::runner,
     test_helpers::{filter::Filter, COMPILED, PROJECT},
 };
+use foundry_config::{FuzzConfig, InvariantConfig};
 use zkforge::{
     result::{SuiteResult, TestKind, TestResult},
     TestOptions, TestOptionsBuilder,
 };
-use foundry_config::{FuzzConfig, InvariantConfig};
 
 #[tokio::test(flavor = "multi_thread")]
 async fn inline_config_run_fuzz() {

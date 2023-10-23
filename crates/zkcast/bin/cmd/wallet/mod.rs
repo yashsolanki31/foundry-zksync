@@ -1,4 +1,3 @@
-use zkcast::SimpleCast;
 use clap::Parser;
 use ethers::{
     core::rand::thread_rng,
@@ -11,6 +10,7 @@ use foundry_common::fs;
 use foundry_config::Config;
 use std::path::Path;
 use yansi::Paint;
+use zkcast::SimpleCast;
 
 pub mod vanity;
 use vanity::VanityArgs;

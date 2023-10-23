@@ -1,3 +1,5 @@
+use clap::Parser;
+use ethers::types::NameOrAddress;
 /// This module handles Bridging assets to ZkSync from Layer 1.
 /// It defines the CLI arguments for the `cast zk-deposit` command and provides functionality
 /// for depositing assets onto zkSync.
@@ -12,12 +14,8 @@
 ///     - `get_url_with_port`: Parses a URL string and attaches a default port if one is not
 ///       specified.
 ///     - `parse_decimal_u256`: Converts a string to a `U256` number.
-use foundry_cli::{
-    opts::{EthereumOpts, TransactionOpts, Wallet},
-};
+use foundry_cli::opts::{TransactionOpts, Wallet};
 use foundry_common::zk_utils::{get_chain, get_private_key, get_rpc_url, get_url_with_port};
-use clap::Parser;
-use ethers::types::NameOrAddress;
 use foundry_config::Chain;
 use std::str::FromStr;
 use zksync_web3_rs::{

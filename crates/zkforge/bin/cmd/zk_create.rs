@@ -1,3 +1,10 @@
+use clap::{Parser, ValueHint};
+use ethers::{
+    abi::Abi,
+    solc::{info::ContractInfo, Project},
+    types::Bytes,
+};
+use eyre::Context;
 /// ZKSync Contract Deployment Module
 /// This module encapsulates the logic required for contract deployment, including:
 /// - Retrieving the contract bytecode and ABI from the Solidity project
@@ -45,17 +52,10 @@
 /// - `ethers`
 /// - `zksync`
 use foundry_cli::{
-    opts::{CoreBuildArgs, EthereumOpts, EtherscanOpts, TransactionOpts},
-    utils::{self, read_constructor_args_file, remove_contract, LoadConfig},
+    opts::{CoreBuildArgs, EthereumOpts, TransactionOpts},
+    utils::read_constructor_args_file,
 };
 use foundry_common::zk_utils::{get_chain, get_private_key, get_rpc_url};
-use clap::{Parser, ValueHint};
-use ethers::{
-    abi::Abi,
-    solc::{info::ContractInfo, Project},
-    types::Bytes,
-};
-use eyre::Context;
 use foundry_config::Config;
 use serde_json::Value;
 use std::{fs, path::PathBuf, str::FromStr};

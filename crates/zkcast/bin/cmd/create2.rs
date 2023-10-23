@@ -1,4 +1,3 @@
-use zkcast::SimpleCast;
 use clap::Parser;
 use ethers::{
     core::rand::thread_rng,
@@ -9,6 +8,7 @@ use eyre::{Result, WrapErr};
 use rayon::prelude::*;
 use regex::RegexSetBuilder;
 use std::{str::FromStr, time::Instant};
+use zkcast::SimpleCast;
 
 /// CLI arguments for `cast create2`.
 #[derive(Debug, Clone, Parser)]

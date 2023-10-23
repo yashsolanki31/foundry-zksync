@@ -1,6 +1,5 @@
 use std::{io, str::FromStr};
 
-use zkcast::Cast;
 use clap::Parser;
 use ethers::{providers::Middleware, types::NameOrAddress};
 use ethers_core::{
@@ -12,6 +11,7 @@ use foundry_cli::{opts::EthereumOpts, utils};
 use foundry_common::abi::{get_event, parse_tokens};
 use foundry_config::Config;
 use itertools::Itertools;
+use zkcast::Cast;
 
 /// CLI arguments for `cast logs`.
 #[derive(Debug, Parser)]

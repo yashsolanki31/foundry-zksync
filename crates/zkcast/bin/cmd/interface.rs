@@ -1,10 +1,10 @@
-use zkcast::{AbiPath, SimpleCast};
 use clap::Parser;
 use eyre::Result;
 use foundry_cli::opts::EtherscanOpts;
 use foundry_common::fs;
 use foundry_config::Config;
 use std::path::{Path, PathBuf};
+use zkcast::{AbiPath, SimpleCast};
 
 /// CLI arguments for `cast interface`.
 #[derive(Debug, Clone, Parser)]
