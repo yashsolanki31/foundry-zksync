@@ -1,30 +1,18 @@
 use super::{install, test::filter::ProjectPathsAwareFilter, watch::WatchArgs};
+use crate::cmd::{
+    zk_solc::{ZkSolc, ZkSolcOpts},
+    zksolc_manager::{ZkSolcManagerBuilder, ZkSolcManagerOpts, DEFAULT_ZKSOLC_VERSION},
+};
 use alloy_primitives::U256;
 use clap::Parser;
-use crate::cmd::zksolc_manager::{ZkSolcManagerBuilder, ZkSolcManagerOpts, DEFAULT_ZKSOLC_VERSION};
-use crate::cmd::zk_solc::{ZkSolc, ZkSolcOpts};
 use eyre::Result;
-use zkforge::{
-    decode::decode_console_logs,
-    executor::inspector::CheatsConfig,
-    gas_report::GasReport,
-    result::{SuiteResult, TestResult, TestStatus},
-    trace::{
-        identifier::{EtherscanIdentifier, LocalTraceIdentifier, SignaturesIdentifier},
-        CallTraceDecoderBuilder, TraceKind,
-    },
-    revm::primitives::SpecId,
-    MultiContractRunner, MultiContractRunnerBuilder, TestOptions, TestOptionsBuilder,
-};
 use foundry_cli::{
     opts::CoreBuildArgs,
     utils::{self, LoadConfig},
 };
 use foundry_common::{
-    compact_to_contract,
-    compile::{ContractSources},
-    evm::EvmArgs,
-    get_contract_name, get_file_name, shell,
+    compact_to_contract, compile::ContractSources, evm::EvmArgs, get_contract_name, get_file_name,
+    shell,
 };
 use foundry_config::{
     figment,
@@ -41,6 +29,18 @@ use std::{collections::BTreeMap, fs, sync::mpsc::channel, time::Duration};
 use tracing::trace;
 use watchexec::config::{InitConfig, RuntimeConfig};
 use yansi::Paint;
+use zkforge::{
+    decode::decode_console_logs,
+    executor::inspector::CheatsConfig,
+    gas_report::GasReport,
+    result::{SuiteResult, TestResult, TestStatus},
+    revm::primitives::SpecId,
+    trace::{
+        identifier::{EtherscanIdentifier, LocalTraceIdentifier, SignaturesIdentifier},
+        CallTraceDecoderBuilder, TraceKind,
+    },
+    MultiContractRunner, MultiContractRunnerBuilder, TestOptions, TestOptionsBuilder,
+};
 
 mod filter;
 mod summary;
@@ -162,7 +162,7 @@ impl TestArgs {
             config = self.load_config();
             project = config.project()?;
         }
-      
+
         // Create test options from general project settings
         // and compiler output
         let project_root = project.paths.root.clone();

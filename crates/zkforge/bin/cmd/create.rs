@@ -69,7 +69,7 @@ pub struct CreateArgs {
 
 impl CreateArgs {
     /// Executes the command to create a contract
-    pub async fn run(mut self) -> Result<()> {
+    pub async fn _run(mut self) -> Result<()> {
         // Find Project & Compile
         let project = self.opts.project()?;
         let mut output = if self.json || self.opts.silent {
@@ -112,13 +112,13 @@ impl CreateArgs {
                     } else {
                         self.constructor_args.clone()
                     };
-                self.parse_constructor_args(v, &constructor_args)?
+                self._parse_constructor_args(v, &constructor_args)?
             }
             None => vec![],
         };
 
         // respect chain, if set explicitly via cmd args
-        let chain_id = if let Some(chain_id) = self.chain_id() {
+        let chain_id = if let Some(chain_id) = self._chain_id() {
             chain_id
         } else {
             provider.get_chainid().await?.as_u64()
@@ -127,17 +127,17 @@ impl CreateArgs {
             // Deploy with unlocked account
             let sender = self.eth.wallet.from.expect("required");
             let provider = provider.with_sender(sender);
-            self.deploy(abi, bin, params, provider, chain_id).await
+            self._deploy(abi, bin, params, provider, chain_id).await
         } else {
             // Deploy with signer
             let signer = self.eth.wallet.signer(chain_id).await?;
             let provider = provider.with_signer(signer);
-            self.deploy(abi, bin, params, provider, chain_id).await
+            self._deploy(abi, bin, params, provider, chain_id).await
         }
     }
 
     /// Returns the provided chain id, if any.
-    fn chain_id(&self) -> Option<u64> {
+    fn _chain_id(&self) -> Option<u64> {
         self.eth.etherscan.chain.map(|chain| chain.id())
     }
 
@@ -147,7 +147,7 @@ impl CreateArgs {
     /// before the contract is deployed. This should prevent situations where a contract is deployed
     /// successfully, but we fail to prepare a verify request which would require manual
     /// verification.
-    async fn verify_preflight_check(
+    async fn _verify_preflight_check(
         &self,
         constructor_args: Option<String>,
         chain: u64,
@@ -179,7 +179,7 @@ impl CreateArgs {
     }
 
     /// Deploys the contract
-    async fn deploy<M: Middleware + 'static>(
+    async fn _deploy<M: Middleware + 'static>(
         self,
         abi: Abi,
         bin: BytecodeObject,
@@ -272,7 +272,7 @@ impl CreateArgs {
                 constructor_args = Some(hex::encode(encoded_args));
             }
 
-            self.verify_preflight_check(constructor_args.clone(), chain).await?;
+            self._verify_preflight_check(constructor_args.clone(), chain).await?;
         }
 
         // Deploy the actual contract
@@ -321,7 +321,7 @@ impl CreateArgs {
         verify.run().await
     }
 
-    fn parse_constructor_args(
+    fn _parse_constructor_args(
         &self,
         constructor: &Constructor,
         constructor_args: &[String],
@@ -368,6 +368,6 @@ mod tests {
             "--chain-id",
             "9999",
         ]);
-        assert_eq!(args.chain_id(), Some(9999));
+        assert_eq!(args._chain_id(), Some(9999));
     }
 }

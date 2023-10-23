@@ -56,7 +56,7 @@ use crate::{
             error::{DatabaseError, DatabaseResult},
             DatabaseExt,
         },
-        inspector::{InspectorStack},
+        inspector::InspectorStack,
     },
 };
 pub use builder::ExecutorBuilder;
@@ -116,7 +116,7 @@ impl Executor {
     /// Creates the default CREATE2 Contract Deployer for local tests and scripts.
     pub fn deploy_create2_deployer(&mut self) -> eyre::Result<()> {
         trace!("deploying local create2 deployer");
-        
+
         return Ok(())
     }
 

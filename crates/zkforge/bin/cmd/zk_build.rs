@@ -25,8 +25,7 @@
 /// zkSync contracts. It is designed to provide a seamless experience for developers, providing
 /// an easy-to-use interface for contract compilation while taking care of the underlying
 /// complexities.
-use super::{watch::WatchArgs};
-use foundry_cli::{opts::CoreBuildArgs, utils::LoadConfig};
+use super::watch::WatchArgs;
 use super::{
     zk_solc::{ZkSolc, ZkSolcOpts},
     zksolc_manager::{
@@ -35,6 +34,7 @@ use super::{
 };
 use clap::Parser;
 use ethers::prelude::Project;
+use foundry_cli::{opts::CoreBuildArgs, utils::LoadConfig};
 use foundry_config::{
     figment::{
         self,
@@ -48,7 +48,6 @@ use serde::Serialize;
 use std::fmt::Debug;
 
 foundry_config::merge_impl_figment_convert!(ZkBuildArgs, args);
-
 
 /// The `ZkBuildArgs` struct encapsulates the parameters required for the zkSync contract
 /// compilation process.

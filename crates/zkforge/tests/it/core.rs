@@ -1,9 +1,9 @@
 //! forge tests for core functionality
 
 use crate::{config::*, test_helpers::filter::Filter};
-use zkforge::result::SuiteResult;
 use foundry_evm::trace::TraceKind;
 use std::{collections::BTreeMap, env};
+use zkforge::result::SuiteResult;
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_core() {

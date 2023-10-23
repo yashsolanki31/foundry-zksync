@@ -1,4 +1,3 @@
-use zkcast::{Cast, SimpleCast};
 use clap::{CommandFactory, Parser};
 use clap_complete::generate;
 use ethers::{
@@ -19,6 +18,7 @@ use foundry_common::{
 };
 use foundry_config::Config;
 use std::time::Instant;
+use zkcast::{Cast, SimpleCast};
 
 pub mod cmd;
 pub mod opts;
@@ -338,7 +338,7 @@ async fn main() -> Result<()> {
             let raw = raw || field.as_ref().is_some_and(|f| f == "raw");
 
             println!("{}", Cast::new(&provider).transaction(tx_hash, field, raw, json).await?)
-        },
+        }
         Subcommands::ZkSendTx(cmd) => cmd.run().await?,
         Subcommands::ZkDepositTx(cmd) => cmd.run().await?,
 

@@ -1,5 +1,4 @@
 use crate::opts::parse_slot;
-use zkcast::Cast;
 use clap::Parser;
 use comfy_table::{presets::ASCII_MARKDOWN, Table};
 use ethers::{
@@ -23,6 +22,7 @@ use foundry_config::{
 use futures::future::join_all;
 use semver::Version;
 use std::str::FromStr;
+use zkcast::Cast;
 
 /// The minimum Solc version for outputting storage layouts.
 ///

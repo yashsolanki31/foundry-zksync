@@ -2,13 +2,13 @@ use super::*;
 use alloy_primitives::{Address, Bytes, U256};
 use ethers::types::NameOrAddress;
 use eyre::Result;
+use tracing::log::trace;
 use zkforge::{
     executor::{CallResult, DeployResult, EvmError, ExecutionErr, Executor, RawCallResult},
     revm::interpreter::{return_ok, InstructionResult},
     trace::{TraceKind, Traces},
     CALLER,
 };
-use tracing::log::trace;
 
 /// Represents which simulation stage is the script execution at.
 pub enum SimulationStage {

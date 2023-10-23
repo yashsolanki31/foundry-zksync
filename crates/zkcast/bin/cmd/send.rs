@@ -1,4 +1,3 @@
-use zkcast::{Cast, TxBuilder};
 use clap::Parser;
 use ethers::{
     prelude::MiddlewareBuilder, providers::Middleware, signers::Signer, types::NameOrAddress,
@@ -11,6 +10,7 @@ use foundry_cli::{
 use foundry_common::cli_warn;
 use foundry_config::{Chain, Config};
 use std::str::FromStr;
+use zkcast::{Cast, TxBuilder};
 
 /// CLI arguments for `cast send`.
 #[derive(Debug, Parser)]

@@ -1,6 +1,6 @@
 use crate::executor::{fork::CreateFork, opts::EvmOpts, Backend, Executor, ExecutorBuilder};
 use ethers::solc::EvmVersion;
-use foundry_config::{Config};
+use foundry_config::Config;
 use revm::primitives::{Env, SpecId};
 use std::ops::{Deref, DerefMut};
 

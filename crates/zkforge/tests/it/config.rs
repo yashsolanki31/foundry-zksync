@@ -3,10 +3,6 @@
 use crate::test_helpers::{
     filter::Filter, COMPILED, COMPILED_WITH_LIBS, EVM_OPTS, LIBS_PROJECT, PROJECT,
 };
-use zkforge::{
-    result::{SuiteResult, TestStatus},
-    MultiContractRunner, MultiContractRunnerBuilder, TestOptions,
-};
 use foundry_config::{
     fs_permissions::PathPermission, Config, FsPermissions, FuzzConfig, FuzzDictionaryConfig,
     InvariantConfig, RpcEndpoint, RpcEndpoints,
@@ -18,6 +14,10 @@ use foundry_utils::types::ToAlloy;
 use std::{
     collections::BTreeMap,
     path::{Path, PathBuf},
+};
+use zkforge::{
+    result::{SuiteResult, TestStatus},
+    MultiContractRunner, MultiContractRunnerBuilder, TestOptions,
 };
 
 /// How to execute a a test run

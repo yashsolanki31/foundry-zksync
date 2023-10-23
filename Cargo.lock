@@ -609,7 +609,7 @@ dependencies = [
  "keccak-hasher",
  "open-fastrlp",
  "reference-trie",
- "revm 3.5.0 (git+https://github.com/dutterbutter/revm.git?branch=db/release_v26_sha3_0.10.6)",
+ "revm",
  "serde",
  "serde_json",
  "triehash",
@@ -971,16 +971,6 @@ dependencies = [
  "hermit-abi 0.1.19",
  "libc",
  "winapi 0.3.9",
-]
-
-[[package]]
-name = "aurora-engine-modexp"
-version = "1.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bfacad86e9e138fca0670949eb8ed4ffdf73a55bded8887efe0863cd1a3a6f70"
-dependencies = [
- "hex",
- "num 0.4.1",
 ]
 
 [[package]]
@@ -1830,7 +1820,7 @@ dependencies = [
  "once_cell",
  "regex",
  "reqwest",
- "revm 3.5.0 (git+https://github.com/dutterbutter/revm.git?branch=db/release_v26_sha3_0.10.6)",
+ "revm",
  "rustyline",
  "semver 1.0.20",
  "serde",
@@ -3201,14 +3191,14 @@ checksum = "5443807d6dff69373d433ab9ef5378ad8df50ca6298caf15de6e52e24aaf54d5"
 [[package]]
 name = "era_revm"
 version = "0.1.0"
-source = "git+https://github.com/matter-labs/era-revm.git?branch=db/update-era-zk-evm#f76f3a0b5f935bf757ae76b427ceb8e17c0790d2"
+source = "git+https://github.com/matter-labs/era-revm.git?branch=release-v26#c4b0230be69f906f56735a1a29c945ebd1018e1c"
 dependencies = [
  "era_test_node",
  "ethabi 18.0.0",
  "eyre",
  "hex",
  "multivm",
- "revm 3.5.0 (git+https://github.com/dutterbutter/revm.git?branch=release_v26_with_old_sha)",
+ "revm",
  "serde",
  "serde_json",
  "zk_evm 1.3.3 (git+https://github.com/matter-labs/era-zk_evm.git?tag=v1.3.3-rc1)",
@@ -4070,7 +4060,7 @@ dependencies = [
  "futures 0.3.28",
  "itertools 0.11.0",
  "jsonpath_lib",
- "revm 3.5.0 (git+https://github.com/dutterbutter/revm.git?branch=db/release_v26_sha3_0.10.6)",
+ "revm",
  "schemars",
  "serde",
  "serde_json",
@@ -4169,7 +4159,7 @@ dependencies = [
  "pretty_assertions",
  "regex",
  "reqwest",
- "revm 3.5.0 (git+https://github.com/dutterbutter/revm.git?branch=db/release_v26_sha3_0.10.6)",
+ "revm",
  "semver 1.0.20",
  "serde",
  "serde_json",
@@ -4193,7 +4183,7 @@ dependencies = [
  "foundry-evm",
  "foundry-utils",
  "ratatui",
- "revm 3.5.0 (git+https://github.com/dutterbutter/revm.git?branch=db/release_v26_sha3_0.10.6)",
+ "revm",
  "tracing",
 ]
 
@@ -4222,7 +4212,7 @@ dependencies = [
  "ordered-float",
  "parking_lot 0.12.1",
  "proptest",
- "revm 3.5.0 (git+https://github.com/dutterbutter/revm.git?branch=db/release_v26_sha3_0.10.6)",
+ "revm",
  "semver 1.0.20",
  "serde",
  "serde_json",
@@ -8608,20 +8598,10 @@ version = "3.5.0"
 source = "git+https://github.com/dutterbutter/revm.git?branch=db/release_v26_sha3_0.10.6#7b96ba436a76eee078fa9fa95b5ef5ba6dbd24f0"
 dependencies = [
  "auto_impl",
- "revm-interpreter 1.3.0 (git+https://github.com/dutterbutter/revm.git?branch=db/release_v26_sha3_0.10.6)",
- "revm-precompile 2.2.0 (git+https://github.com/dutterbutter/revm.git?branch=db/release_v26_sha3_0.10.6)",
+ "revm-interpreter",
+ "revm-precompile",
  "serde",
  "serde_json",
-]
-
-[[package]]
-name = "revm"
-version = "3.5.0"
-source = "git+https://github.com/dutterbutter/revm.git?branch=release_v26_with_old_sha#f2305633ae77f39ff38f86e0df38244045f4493b"
-dependencies = [
- "auto_impl",
- "revm-interpreter 1.3.0 (git+https://github.com/dutterbutter/revm.git?branch=release_v26_with_old_sha)",
- "revm-precompile 2.2.0 (git+https://github.com/dutterbutter/revm.git?branch=release_v26_with_old_sha)",
 ]
 
 [[package]]
@@ -8629,16 +8609,8 @@ name = "revm-interpreter"
 version = "1.3.0"
 source = "git+https://github.com/dutterbutter/revm.git?branch=db/release_v26_sha3_0.10.6#7b96ba436a76eee078fa9fa95b5ef5ba6dbd24f0"
 dependencies = [
- "revm-primitives 1.3.0 (git+https://github.com/dutterbutter/revm.git?branch=db/release_v26_sha3_0.10.6)",
+ "revm-primitives",
  "serde",
-]
-
-[[package]]
-name = "revm-interpreter"
-version = "1.3.0"
-source = "git+https://github.com/dutterbutter/revm.git?branch=release_v26_with_old_sha#f2305633ae77f39ff38f86e0df38244045f4493b"
-dependencies = [
- "revm-primitives 1.3.0 (git+https://github.com/dutterbutter/revm.git?branch=release_v26_with_old_sha)",
 ]
 
 [[package]]
@@ -8650,26 +8622,9 @@ dependencies = [
  "k256 0.13.1",
  "num 0.4.1",
  "once_cell",
- "revm-primitives 1.3.0 (git+https://github.com/dutterbutter/revm.git?branch=db/release_v26_sha3_0.10.6)",
+ "revm-primitives",
  "ripemd",
  "secp256k1 0.27.0",
- "sha2 0.10.8",
- "sha3 0.10.8",
- "substrate-bn",
-]
-
-[[package]]
-name = "revm-precompile"
-version = "2.2.0"
-source = "git+https://github.com/dutterbutter/revm.git?branch=release_v26_with_old_sha#f2305633ae77f39ff38f86e0df38244045f4493b"
-dependencies = [
- "aurora-engine-modexp",
- "c-kzg",
- "k256 0.13.1",
- "once_cell",
- "revm-primitives 1.3.0 (git+https://github.com/dutterbutter/revm.git?branch=release_v26_with_old_sha)",
- "ripemd",
- "secp256k1 0.28.0",
  "sha2 0.10.8",
  "sha3 0.10.8",
  "substrate-bn",
@@ -8689,25 +8644,8 @@ dependencies = [
  "enumn",
  "hashbrown 0.14.2",
  "hex",
- "serde",
-]
-
-[[package]]
-name = "revm-primitives"
-version = "1.3.0"
-source = "git+https://github.com/dutterbutter/revm.git?branch=release_v26_with_old_sha#f2305633ae77f39ff38f86e0df38244045f4493b"
-dependencies = [
- "alloy-primitives",
- "alloy-rlp",
- "auto_impl",
- "bitflags 2.4.1",
- "bitvec 1.0.1",
- "c-kzg",
- "derive_more",
- "enumn",
- "hashbrown 0.14.2",
- "hex",
  "once_cell",
+ "serde",
 ]
 
 [[package]]
@@ -9309,15 +9247,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "secp256k1"
-version = "0.28.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2acea373acb8c21ecb5a23741452acd2593ed44ee3d343e72baaa143bc89d0d5"
-dependencies = [
- "secp256k1-sys 0.9.0",
-]
-
-[[package]]
 name = "secp256k1-sys"
 version = "0.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -9331,15 +9260,6 @@ name = "secp256k1-sys"
 version = "0.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "70a129b9e9efbfb223753b9163c4ab3b13cff7fd9c7f010fbac25ab4099fa07e"
-dependencies = [
- "cc",
-]
-
-[[package]]
-name = "secp256k1-sys"
-version = "0.9.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "09e67c467c38fd24bd5499dc9a18183b31575c12ee549197e3e20d57aa4fe3b7"
 dependencies = [
  "cc",
 ]

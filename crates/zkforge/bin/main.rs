@@ -35,7 +35,7 @@ fn main() -> Result<()> {
         }
         Subcommands::Coverage(cmd) => utils::block_on(cmd.run()),
         Subcommands::Bind(cmd) => cmd.run(),
-        Subcommands::ZkBuild(cmd)  => cmd.run(),
+        Subcommands::ZkBuild(cmd) => cmd.run(),
         Subcommands::Debug(cmd) => utils::block_on(cmd.run()),
         Subcommands::VerifyContract(args) => utils::block_on(args.run()),
         Subcommands::VerifyCheck(args) => utils::block_on(args.run()),

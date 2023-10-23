@@ -2,8 +2,8 @@
 
 use crate::{config::*, test_helpers::filter::Filter};
 use ethers::types::U256;
-use zkforge::result::{SuiteResult, TestStatus};
 use std::collections::BTreeMap;
+use zkforge::result::{SuiteResult, TestStatus};
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_fuzz() {

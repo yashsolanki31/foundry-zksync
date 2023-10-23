@@ -1,4 +1,3 @@
-use zkcast::{Cast, TxBuilder};
 use clap::Parser;
 use ethers::{
     providers::Middleware,
@@ -11,6 +10,7 @@ use foundry_cli::{
 };
 use foundry_config::{Chain, Config};
 use std::str::FromStr;
+use zkcast::{Cast, TxBuilder};
 
 /// CLI arguments for `cast access-list`.
 #[derive(Debug, Parser)]

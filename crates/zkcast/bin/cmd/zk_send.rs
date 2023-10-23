@@ -1,3 +1,5 @@
+use clap::Parser;
+use ethers::types::NameOrAddress;
 /// This module handles transactions related to ZkSync. It provides functionality for sending
 /// transactions and withdrawing from Layer 2 to Layer 1. The module also defines the
 /// command-line arguments for the `cast zk-send` subcommand.
@@ -41,11 +43,8 @@
 /// The `print_receipt` method extracts relevant information from the transaction receipt and
 /// prints it to the console. This includes the transaction hash, gas used, effective gas
 /// price, block number, and deployed contract address, if applicable.
-use foundry_cli::{
-    opts::{EthereumOpts, TransactionOpts},
-};
-use clap::Parser;
-use ethers::types::NameOrAddress;
+use foundry_cli::opts::{EthereumOpts, TransactionOpts};
+use foundry_common::zk_utils::{get_chain, get_private_key, get_rpc_url};
 use foundry_config::Config;
 use std::str::FromStr;
 use zksync_web3_rs::{
@@ -56,7 +55,6 @@ use zksync_web3_rs::{
     zks_utils::CONTRACT_DEPLOYER_ADDR,
     ZKSWallet,
 };
-use foundry_common::zk_utils::{get_chain, get_private_key, get_rpc_url};
 
 /// CLI arguments for the `cast zk-send` subcommand.
 ///

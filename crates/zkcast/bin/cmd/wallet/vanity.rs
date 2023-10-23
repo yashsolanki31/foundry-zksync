@@ -1,4 +1,3 @@
-use zkcast::SimpleCast;
 use clap::{builder::TypedValueParser, Parser};
 use ethers::{
     core::{k256::ecdsa::SigningKey, rand::thread_rng},
@@ -7,6 +6,7 @@ use ethers::{
     utils::{get_contract_address, secret_key_to_address},
 };
 use eyre::Result;
+use zkcast::SimpleCast;
 
 use rayon::iter::{self, ParallelIterator};
 use regex::Regex;
