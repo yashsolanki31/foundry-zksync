@@ -13,7 +13,7 @@ repository.workspace = true
 # foundry internal
 foundry-evm = { path = "../../evm" }
 foundry-utils = { path = "../../utils" }
-revm = { workspace = true, default-features = false, features = ["std", "serde", "memory_limit"] }
+revm = { git = "https://github.com/dutterbutter/revm.git", branch = "db/release_v26_sha3_0.10.6", default-features = false, features = ["std", "serde", "memory_limit"] }
 
 alloy-primitives = { workspace = true, features = ["serde"] }
 ethers-core.workspace = true

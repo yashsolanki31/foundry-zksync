@@ -4,7 +4,7 @@ use crate::{
     config::*,
     test_helpers::{filter::Filter, PROJECT, RE_PATH_SEPARATOR},
 };
-use forge::result::SuiteResult;
+use zkforge::result::SuiteResult;
 use foundry_config::{fs_permissions::PathPermission, Config, FsPermissions};
 
 /// Executes reverting fork test

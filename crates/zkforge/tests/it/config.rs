@@ -3,7 +3,7 @@
 use crate::test_helpers::{
     filter::Filter, COMPILED, COMPILED_WITH_LIBS, EVM_OPTS, LIBS_PROJECT, PROJECT,
 };
-use forge::{
+use zkforge::{
     result::{SuiteResult, TestStatus},
     MultiContractRunner, MultiContractRunnerBuilder, TestOptions,
 };

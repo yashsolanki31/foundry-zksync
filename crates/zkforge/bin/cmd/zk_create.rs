@@ -48,8 +48,7 @@ use foundry_cli::{
     opts::{CoreBuildArgs, EthereumOpts, EtherscanOpts, TransactionOpts},
     utils::{self, read_constructor_args_file, remove_contract, LoadConfig},
 };
-use crate::zkcast::zk_utils::{get_chain, get_private_key, get_rpc_url};
-
+use foundry_common::zk_utils::{get_chain, get_private_key, get_rpc_url};
 use clap::{Parser, ValueHint};
 use ethers::{
     abi::Abi,
@@ -161,7 +160,7 @@ impl ZkCreateArgs {
     /// 10. If deployment is successful, the contract address, transaction hash, gas used, gas
     ///     price, and block number are printed to the console.
     pub async fn run(self) -> eyre::Result<()> {
-        let private_key = get_private_key(&self.eth.wallet.private_key)?;
+        let private_key = get_private_key(&self.eth.wallet.raw.private_key)?;
         let rpc_url = get_rpc_url(&self.eth.rpc.url)?;
         let config = Config::from(&self.eth);
         let chain = get_chain(config.chain_id)?;

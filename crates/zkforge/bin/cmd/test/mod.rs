@@ -1,8 +1,8 @@
-use super::{install, test::filter::ProjectPathsAwareFilter, watch::WatchArgs, zksolc::{ZkSolc, ZkSolcOpts},
-zksolc_manager::{ZkSolcManagerBuilder, ZkSolcManagerOpts, DEFAULT_ZKSOLC_VERSION}};
+use super::{install, test::filter::ProjectPathsAwareFilter, watch::WatchArgs};
 use alloy_primitives::U256;
 use clap::Parser;
-
+use crate::cmd::zksolc_manager::{ZkSolcManagerBuilder, ZkSolcManagerOpts, DEFAULT_ZKSOLC_VERSION};
+use crate::cmd::zk_solc::{ZkSolc, ZkSolcOpts};
 use eyre::Result;
 use zkforge::{
     decode::decode_console_logs,
@@ -13,6 +13,7 @@ use zkforge::{
         identifier::{EtherscanIdentifier, LocalTraceIdentifier, SignaturesIdentifier},
         CallTraceDecoderBuilder, TraceKind,
     },
+    revm::primitives::SpecId,
     MultiContractRunner, MultiContractRunnerBuilder, TestOptions, TestOptionsBuilder,
 };
 use foundry_cli::{
@@ -161,17 +162,10 @@ impl TestArgs {
             config = self.load_config();
             project = config.project()?;
         }
-
-        let compiler = ProjectCompiler::default();
-        let output = match (config.sparse_mode, self.opts.silent | self.json) {
-            (false, false) => compiler.compile(&project),
-            (true, false) => compiler.compile_sparse(&project, filter.clone()),
-            (false, true) => compile::suppress_compile(&project),
-            (true, true) => compile::suppress_compile_sparse(&project, filter.clone()),
-        }?;
+      
         // Create test options from general project settings
         // and compiler output
-        let project_root = &project.paths.root;
+        let project_root = project.paths.root.clone();
         let toml = config.get_config_path();
         let profiles = get_available_profiles(toml)?;
 
@@ -193,7 +187,7 @@ impl TestArgs {
             .fuzz(config.fuzz)
             .invariant(config.invariant)
             .profiles(profiles)
-            .build(&output, project_root)?;
+            .build(&output, &project_root)?;
 
         // Determine print verbosity and executor verbosity
         let verbosity = evm_opts.verbosity;
@@ -209,14 +203,14 @@ impl TestArgs {
         let mut runner_builder = MultiContractRunnerBuilder::default()
             .set_debug(should_debug)
             .initial_balance(evm_opts.initial_balance)
-            .evm_spec(config.evm_spec_id())
+            .evm_spec(SpecId::LATEST)
             .sender(evm_opts.sender)
             .with_fork(evm_opts.get_fork(&config, env.clone()))
             .with_cheats_config(CheatsConfig::new(&config, &evm_opts))
             .with_test_options(test_options.clone());
 
         let mut runner = runner_builder.clone().build(
-            project_root,
+            project_root.clone(),
             output.clone(),
             env.clone(),
             evm_opts.clone(),

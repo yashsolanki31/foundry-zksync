@@ -15,7 +15,7 @@ repository.workspace = true
 ethers-core.workspace = true
 ethers-solc = { workspace = true, features = ["async", "svm-solc"] }
 ethers-etherscan.workspace = true
-revm-primitives = { workspace = true, default-features = false, features = ["std"] }
+revm = { git = "https://github.com/dutterbutter/revm.git", branch = "db/release_v26_sha3_0.10.6", default-features = false, features = ["std", "serde", "memory_limit"] }
 
 # formats
 Inflector = "0.11"

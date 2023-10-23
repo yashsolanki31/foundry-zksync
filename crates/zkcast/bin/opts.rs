@@ -897,7 +897,7 @@ pub fn parse_slot(s: &str) -> Result<H256> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use cast::SimpleCast;
+    use zkcast::SimpleCast;
     use ethers::types::BlockNumber;
 
     #[test]

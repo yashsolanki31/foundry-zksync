@@ -12,10 +12,10 @@
 ///     - `get_url_with_port`: Parses a URL string and attaches a default port if one is not
 ///       specified.
 ///     - `parse_decimal_u256`: Converts a string to a `U256` number.
-use crate::{
-    cmd::zkcast::zk_utils::{get_chain, get_private_key, get_rpc_url, get_url_with_port},
-    opts::{TransactionOpts, Wallet},
+use foundry_cli::{
+    opts::{EthereumOpts, TransactionOpts, Wallet},
 };
+use foundry_common::zk_utils::{get_chain, get_private_key, get_rpc_url, get_url_with_port};
 use clap::Parser;
 use ethers::types::NameOrAddress;
 use foundry_config::Chain;
@@ -124,7 +124,7 @@ impl ZkDepositTxArgs {
     /// - Ok: If the deposit transaction is successfully completed.
     /// - Err: If an error occurred during the execution of the deposit transaction.
     pub async fn run(self) -> eyre::Result<()> {
-        let private_key = get_private_key(&self.wallet.private_key)?;
+        let private_key = get_private_key(&self.wallet.raw.private_key)?;
         let l1_url = get_rpc_url(&self.l1_url)?;
         let l2_url = get_url_with_port(&self.l2_url).expect("Invalid L2_RPC_URL");
         let chain: Chain = get_chain(self.chain)?;

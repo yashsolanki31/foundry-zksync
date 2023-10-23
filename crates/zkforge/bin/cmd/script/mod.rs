@@ -17,7 +17,7 @@ use ethers::{
     },
 };
 use eyre::{ContextCompat, Result, WrapErr};
-use forge::{
+use zkforge::{
     debug::DebugArena,
     decode::decode_console_logs,
     executor::{opts::EvmOpts, Backend},

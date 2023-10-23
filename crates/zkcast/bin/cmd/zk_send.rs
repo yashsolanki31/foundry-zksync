@@ -41,7 +41,9 @@
 /// The `print_receipt` method extracts relevant information from the transaction receipt and
 /// prints it to the console. This includes the transaction hash, gas used, effective gas
 /// price, block number, and deployed contract address, if applicable.
-use crate::opts::{EthereumOpts, TransactionOpts};
+use foundry_cli::{
+    opts::{EthereumOpts, TransactionOpts},
+};
 use clap::Parser;
 use ethers::types::NameOrAddress;
 use foundry_config::Config;
@@ -54,8 +56,7 @@ use zksync_web3_rs::{
     zks_utils::CONTRACT_DEPLOYER_ADDR,
     ZKSWallet,
 };
-
-use super::zk_utils::{get_chain, get_private_key, get_rpc_url};
+use foundry_common::zk_utils::{get_chain, get_private_key, get_rpc_url};
 
 /// CLI arguments for the `cast zk-send` subcommand.
 ///
@@ -139,7 +140,7 @@ impl ZkSendTxArgs {
     /// - Ok: If the transaction or withdraw operation is successful.
     /// - Err: If any error occurs during the operation.
     pub async fn run(self) -> eyre::Result<()> {
-        let private_key = get_private_key(&self.eth.wallet.private_key)?;
+        let private_key = get_private_key(&self.eth.wallet.raw.private_key)?;
         let rpc_url = get_rpc_url(&self.eth.rpc.url)?;
         let config = Config::from(&self.eth);
         let chain = get_chain(config.chain_id)?;

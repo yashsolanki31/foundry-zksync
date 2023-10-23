@@ -2,7 +2,7 @@ use crate::{
     config::runner,
     test_helpers::{filter::Filter, COMPILED, PROJECT},
 };
-use forge::{
+use zkforge::{
     result::{SuiteResult, TestKind, TestResult},
     TestOptions, TestOptionsBuilder,
 };

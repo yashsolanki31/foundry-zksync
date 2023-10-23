@@ -19,6 +19,7 @@ use foundry_utils::types::ToEthers;
 use solang_parser::pt::{self, CodeLocation};
 use std::str::FromStr;
 use yansi::Paint;
+use revm::primitives::SpecId;
 
 const USIZE_MAX_AS_U256: U256 = U256::from_limbs([usize::MAX as u64, 0, 0, 0]);
 
@@ -296,7 +297,7 @@ impl SessionSource {
                 )
             })
             .gas_limit(self.config.evm_opts.gas_limit())
-            .spec(self.config.foundry_config.evm_spec_id())
+            .spec(SpecId::LATEST)
             .build(env, backend);
 
         // Create a [ChiselRunner] with a default balance of [U256::MAX] and
