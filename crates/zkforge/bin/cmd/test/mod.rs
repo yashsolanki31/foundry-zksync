@@ -20,7 +20,7 @@ use foundry_config::{
         value::{Dict, Map},
         Metadata, Profile, Provider,
     },
-    get_available_profiles, Config,
+    Config, get_available_profiles,
 };
 use foundry_debugger::DebuggerArgs;
 use foundry_evm::fuzz::CounterExample;
@@ -34,12 +34,11 @@ use zkforge::{
     executor::inspector::CheatsConfig,
     gas_report::GasReport,
     result::{SuiteResult, TestResult, TestStatus},
-    revm::primitives::SpecId,
     trace::{
         identifier::{EtherscanIdentifier, LocalTraceIdentifier, SignaturesIdentifier},
         CallTraceDecoderBuilder, TraceKind,
     },
-    MultiContractRunner, MultiContractRunnerBuilder, TestOptions, TestOptionsBuilder,
+    MultiContractRunner, MultiContractRunnerBuilder, TestOptions, TestOptionsBuilder
 };
 
 mod filter;
@@ -165,7 +164,7 @@ impl TestArgs {
 
         // Create test options from general project settings
         // and compiler output
-        let project_root = project.paths.root.clone();
+        let project_root = project.paths.root.join("zkout");
         let toml = config.get_config_path();
         let profiles = get_available_profiles(toml)?;
 
@@ -203,14 +202,14 @@ impl TestArgs {
         let mut runner_builder = MultiContractRunnerBuilder::default()
             .set_debug(should_debug)
             .initial_balance(evm_opts.initial_balance)
-            .evm_spec(SpecId::LATEST)
+            .evm_spec(config.evm_spec_id())
             .sender(evm_opts.sender)
             .with_fork(evm_opts.get_fork(&config, env.clone()))
             .with_cheats_config(CheatsConfig::new(&config, &evm_opts))
             .with_test_options(test_options.clone());
 
         let mut runner = runner_builder.clone().build(
-            project_root.clone(),
+            &project_root,
             output.clone(),
             env.clone(),
             evm_opts.clone(),

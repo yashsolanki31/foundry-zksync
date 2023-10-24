@@ -6,10 +6,6 @@ extern crate tracing;
 /// Decoding helpers
 pub mod decode;
 
-// Era-revm
-// Used for zkSync translation
-use era_revm as _;
-
 /// Call tracing
 /// Contains a call trace arena, decoding and formatting utilities
 pub mod trace;

@@ -3191,7 +3191,7 @@ checksum = "5443807d6dff69373d433ab9ef5378ad8df50ca6298caf15de6e52e24aaf54d5"
 [[package]]
 name = "era_revm"
 version = "0.1.0"
-source = "git+https://github.com/matter-labs/era-revm.git?branch=release-v26#c4b0230be69f906f56735a1a29c945ebd1018e1c"
+source = "git+https://github.com/matter-labs/era-revm.git?branch=release-v26#3b8ad433c6030f00951138c24b2e3c4cfe7558a2"
 dependencies = [
  "era_test_node",
  "ethabi 18.0.0",
@@ -3210,7 +3210,7 @@ dependencies = [
 [[package]]
 name = "era_test_node"
 version = "0.1.0-alpha.8"
-source = "git+https://github.com/matter-labs/era-test-node.git?branch=db/update-to-latest#953fa9e6f3ad5140344f06420b07eece477fcada"
+source = "git+https://github.com/matter-labs/era-test-node.git?branch=db/update-to-latest#366a516b2537f3e8eef58885f09bf25010b433d2"
 dependencies = [
  "anyhow",
  "bigdecimal",
