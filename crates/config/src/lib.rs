@@ -1786,15 +1786,15 @@ impl Default for Config {
             sender: Config::DEFAULT_SENDER,
             tx_origin: Config::DEFAULT_SENDER,
             initial_balance: U256::from(0xffffffffffffffffffffffffu128),
-            block_number: 1,
+            block_number: 0, // era-test-node starts at block 0
             fork_block_number: None,
             chain_id: None,
             gas_limit: i64::MAX.into(),
             code_size_limit: None,
             gas_price: None,
             block_base_fee_per_gas: 0,
-            block_coinbase: Address::ZERO,
-            block_timestamp: 1,
+            block_coinbase: Address::zero(),
+            block_timestamp: 0, // era-test-node starts at timestamp 0
             block_difficulty: 0,
             block_prevrandao: Default::default(),
             block_gas_limit: None,
