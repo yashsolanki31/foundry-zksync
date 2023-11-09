@@ -4070,6 +4070,7 @@ dependencies = [
 [[package]]
 name = "foundry-block-explorers"
 version = "0.1.0"
+source = "git+https://github.com/dutterbutter/block-explorers.git?rev=880584d3b2e34a65797479e0df783c0d06feea5e#880584d3b2e34a65797479e0df783c0d06feea5e"
 dependencies = [
  "alloy-json-abi",
  "alloy-primitives",
@@ -4205,6 +4206,7 @@ dependencies = [
 [[package]]
 name = "foundry-compilers"
 version = "0.1.0"
+source = "git+https://github.com/dutterbutter/compilers.git?rev=1e5a5ee65b9aaea2e72500b5a6d9ca8defafd37d#1e5a5ee65b9aaea2e72500b5a6d9ca8defafd37d"
 dependencies = [
  "alloy-json-abi",
  "alloy-primitives",
@@ -13036,8 +13038,3 @@ dependencies = [
  "cc",
  "pkg-config",
 ]
-
-[[patch.unused]]
-name = "foundry-block-explorers"
-version = "0.1.0"
-source = "git+https://github.com/foundry-rs/block-explorers#3c118b815cb443ac62e0818b18da9f3be5871af0"

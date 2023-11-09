@@ -136,9 +136,9 @@ foundry-test-utils = { path = "crates/test-utils" }
 foundry-utils = { path = "crates/utils" }
 
 # block explorer & verification bindings
-foundry-block-explorers = { path = "/Users/dustinbrickwood/Documents/dev/dut/forks/block-explorers", default-features = false }
+foundry-block-explorers = { git = "https://github.com/dutterbutter/block-explorers.git", rev = "880584d3b2e34a65797479e0df783c0d06feea5e" , default-features = false }
 # solc & compilation utilities
-foundry-compilers = { path = "/Users/dustinbrickwood/Documents/dev/dut/forks/compilers", default-features = false }
+foundry-compilers = { git = "https://github.com/dutterbutter/compilers.git", rev= "1e5a5ee65b9aaea2e72500b5a6d9ca8defafd37d", default-features = false }
 
 ## revm
 # no default features to avoid c-kzg
@@ -196,7 +196,8 @@ ethers-middleware = { git = "https://github.com/gakonst/ethers-rs", rev = "4f7b3
 ethers-etherscan = { git = "https://github.com/gakonst/ethers-rs", rev = "4f7b354ecec0aea38ed165560ae4f3224d644c9e" }
 ethers-solc = { git = "https://github.com/gakonst/ethers-rs", rev = "4f7b354ecec0aea38ed165560ae4f3224d644c9e" }
 
-foundry-block-explorers = { git = "https://github.com/foundry-rs/block-explorers" }
+#foundry-block-explorers = { git = "https://github.com/foundry-rs/block-explorers" }
+foundry-block-explorers = { git = "https://github.com/dutterbutter/block-explorers.git", rev = "880584d3b2e34a65797479e0df783c0d06feea5e" }
 
 alloy-dyn-abi = { git = "https://github.com/alloy-rs/core/" }
 alloy-primitives = { git = "https://github.com/alloy-rs/core/" }
