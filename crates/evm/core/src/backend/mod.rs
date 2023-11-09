@@ -20,7 +20,7 @@ use revm::{
     precompile::{Precompiles, SpecId},
     primitives::{
         Account, AccountInfo, Bytecode, CreateScheme, Env, HashMap as Map, Log, ResultAndState,
-        StorageSlot, TransactTo, KECCAK_EMPTY,
+        StorageSlot, TransactTo, KECCAK_EMPTY, EVMResult
     },
     Database, DatabaseCommit, Inspector, JournaledState, EVM,
 };

@@ -27,7 +27,7 @@
 /// complexities.
 use super::{install, watch::WatchArgs};
 use clap::Parser;
-use ethers::prelude::Project;
+use foundry_compilers::Project;
 use foundry_cli::{opts::CoreBuildArgs, utils::LoadConfig};
 use foundry_common::zksolc_manager::{setup_zksolc_manager, DEFAULT_ZKSOLC_VERSION};
 use foundry_config::{

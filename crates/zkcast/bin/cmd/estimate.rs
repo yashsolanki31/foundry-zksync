@@ -1,5 +1,7 @@
+use alloy_primitives::U256;
+use zkcast::{Cast, TxBuilder};
 use clap::Parser;
-use ethers::types::{NameOrAddress, U256};
+use ethers::types::NameOrAddress;
 use eyre::Result;
 use foundry_cli::{
     opts::{EtherscanOpts, RpcOpts},
@@ -7,7 +9,6 @@ use foundry_cli::{
 };
 use foundry_config::{figment::Figment, Config};
 use std::str::FromStr;
-use zkcast::{Cast, TxBuilder};
 
 /// CLI arguments for `cast estimate`.
 #[derive(Debug, Parser)]

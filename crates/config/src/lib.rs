@@ -77,7 +77,7 @@ pub mod fix;
 
 // reexport so cli types can implement `figment::Provider` to easily merge compiler arguments
 pub use figment;
-use revm::primitives::SpecId;
+use revm_primitives::SpecId;
 use tracing::warn;
 
 /// config providers
@@ -1793,7 +1793,7 @@ impl Default for Config {
             code_size_limit: None,
             gas_price: None,
             block_base_fee_per_gas: 0,
-            block_coinbase: Address::zero(),
+            block_coinbase: Address::ZERO,
             block_timestamp: 0, // era-test-node starts at timestamp 0
             block_difficulty: 0,
             block_prevrandao: Default::default(),

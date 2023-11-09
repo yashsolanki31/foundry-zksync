@@ -1,37 +1,35 @@
 use super::{install, test::FilterArgs};
 use alloy_primitives::{Address, Bytes, U256};
 use clap::{Parser, ValueEnum, ValueHint};
-use ethers::{
-    prelude::{
-        artifacts::{Ast, CompactBytecode, CompactDeployedBytecode},
-        Artifact, Project, ProjectCompileOutput,
-    },
-    solc::{artifacts::contract::CompactContractBytecode, sourcemap::SourceMap},
-};
 use eyre::{Context, Result};
+use zkforge::{
+    coverage::{
+        analysis::SourceAnalyzer, anchors::find_anchors, ContractId, CoverageReport,
+        CoverageReporter, DebugReporter, ItemAnchor, LcovReporter, SummaryReporter,
+    },
+    inspectors::CheatsConfig,
+    opts::EvmOpts,
+    result::SuiteResult,
+    revm::primitives::SpecId,
+    utils::{build_ic_pc_map, ICPCMap},
+    MultiContractRunnerBuilder, TestOptions,
+};
 use foundry_cli::{
     opts::CoreBuildArgs,
     p_println,
     utils::{LoadConfig, STATIC_FUZZ_SEED},
 };
 use foundry_common::{compile::ProjectCompiler, evm::EvmArgs, fs};
+use foundry_compilers::{
+    artifacts::{contract::CompactContractBytecode, Ast, CompactBytecode, CompactDeployedBytecode},
+    sourcemap::SourceMap,
+    Artifact, Project, ProjectCompileOutput,
+};
 use foundry_config::{Config, SolcReq};
-use foundry_utils::types::ToEthers;
 use semver::Version;
 use std::{collections::HashMap, path::PathBuf, sync::mpsc::channel};
 use tracing::trace;
 use yansi::Paint;
-use zkforge::{
-    coverage::{
-        analysis::SourceAnalyzer, anchors::find_anchors, ContractId, CoverageReport,
-        CoverageReporter, DebugReporter, ItemAnchor, LcovReporter, SummaryReporter,
-    },
-    executor::{inspector::CheatsConfig, opts::EvmOpts},
-    result::SuiteResult,
-    revm::primitives::SpecId,
-    utils::{build_ic_pc_map, ICPCMap},
-    MultiContractRunnerBuilder, TestOptions,
-};
 
 /// A map, keyed by contract ID, to a tuple of the deployment source map and the runtime source map.
 type SourceMaps = HashMap<ContractId, (SourceMap, SourceMap)>;
@@ -89,7 +87,7 @@ impl CoverageArgs {
         }
 
         // Set fuzz seed so coverage reports are deterministic
-        config.fuzz.seed = Some(U256::from_be_bytes(STATIC_FUZZ_SEED).to_ethers());
+        config.fuzz.seed = Some(U256::from_be_bytes(STATIC_FUZZ_SEED));
 
         let (project, output) = self.build(&config)?;
         p_println!(!self.opts.silent => "Analysing contracts...");
@@ -300,10 +298,10 @@ impl CoverageArgs {
         let env = evm_opts.evm_env().await?;
         let mut runner = MultiContractRunnerBuilder::default()
             .initial_balance(evm_opts.initial_balance)
-            .evm_spec(SpecId::LATEST)
+            .evm_spec(config.evm_spec_id())
             .sender(evm_opts.sender)
             .with_fork(evm_opts.get_fork(&config, env.clone()))
-            .with_cheats_config(CheatsConfig::new(&config, &evm_opts))
+            .with_cheats_config(CheatsConfig::new(&config, evm_opts.clone()))
             .with_test_options(TestOptions { fuzz: config.fuzz, ..Default::default() })
             .set_coverage(true)
             .build(root.clone(), output, env, evm_opts)?;
@@ -389,7 +387,7 @@ fn dummy_link_bytecode(mut obj: CompactBytecode) -> Option<Bytes> {
     let link_references = obj.link_references.clone();
     for (file, libraries) in link_references {
         for library in libraries.keys() {
-            obj.link(&file, library, Address::ZERO.to_ethers());
+            obj.link(&file, library, Address::ZERO);
         }
     }
 

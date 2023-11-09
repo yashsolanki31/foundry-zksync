@@ -2,6 +2,7 @@ use crate::cmd::{
     bind::BindArgs,
     cache::CacheArgs,
     config, coverage,
+    create::CreateArgs,
     debug::DebugArgs,
     doc::DocArgs,
     flatten,
@@ -92,6 +93,10 @@ pub enum Subcommands {
     /// Check verification status on Etherscan.
     #[clap(visible_alias = "vc")]
     VerifyCheck(VerifyCheckArgs),
+
+    /// Deploy a smart contract.
+    #[clap(visible_alias = "c")]
+    Create(CreateArgs),
 
     /// Create a new Forge project.
     Init(InitArgs),

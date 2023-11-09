@@ -27,8 +27,16 @@ foundry-common.workspace = true
 ethers-etherscan.workspace = true
 ethers-core.workspace = true
 ethers-providers.workspace = true
+
+alloy-primitives.workspace = true
+alloy-json-abi.workspace = true
+alloy-dyn-abi.workspace = true
+
+foundry-compilers = { workspace = true, default-features = false }
+foundry-block-explorers = { workspace = true }
+
 chrono.workspace = true
-evm-disassembler = "0.2"
+evm-disassembler = "0.3"
 eyre.workspace = true
 futures = "0.3"
 hex.workspace = true
@@ -37,14 +45,11 @@ serde.workspace = true
 serde_json.workspace = true
 
 # zksync
-zksync-web3-rs = {git = "https://github.com/lambdaclass/zksync-web3-rs.git", rev = "70327ae5413c517bd4d27502507cdd96ee40cd22"}
-
-# commit 2a5ab4cf7db0625b406cdf9023604654ce56af46 
+zksync-web3-rs = { git = "https://github.com/lambdaclass/zksync-web3-rs.git", rev = "70327ae5413c517bd4d27502507cdd96ee40cd22" }
 ansi_term = "0.12.1"
 anyhow = {version = "1.0.70"}
 dirs = {version = "5.0.0"}
 url = "2.3.1"
-
 ethabi = "18.0.0"
 uint = "0.9.0"
 

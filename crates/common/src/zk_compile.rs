@@ -32,10 +32,9 @@
 ///   construct the path and file for saving the compiler output artifacts.
 use crate::zksolc_manager::ZkSolcManager;
 use ansi_term::Colour::{Red, Yellow};
-use ethers_core::types::Bytes;
-use ethers_solc::{
+use foundry_compilers::{
     artifacts::{
-        output_selection::FileOutputSelection, CompactBytecode, CompactDeployedBytecode,
+        BytecodeObject, output_selection::FileOutputSelection, CompactBytecode, CompactDeployedBytecode,
         LosslessAbi, Source, StandardJsonCompilerInput,
     },
     remappings::RelativeRemapping,
@@ -348,7 +347,8 @@ impl ZkSolc {
             }
         }
         let mut result = ProjectCompileOutput::default();
-        result.compiled_artifacts = Artifacts(data);
+        ProjectCompileOutput::set_compiled_artifacts(&mut result, Artifacts(data));
+        //result.compiled_artifacts = Artifacts(data);
         Ok(result)
     }
 
@@ -479,7 +479,7 @@ impl ZkSolc {
                         .cloned()
                         .collect();
 
-                    let packed_bytecode = Bytes::from(
+                    let packed_bytecode = alloy_primitives::Bytes::from(
                         era_revm::factory_deps::PackedEraBytecode::new(
                             contract.hash.as_ref().unwrap().clone(),
                             contract.evm.bytecode.as_ref().unwrap().object.clone(),
@@ -490,7 +490,7 @@ impl ZkSolc {
 
                     let mut art = ConfigurableContractArtifact {
                         bytecode: Some(CompactBytecode {
-                            object: ethers_solc::artifacts::BytecodeObject::Bytecode(
+                            object: BytecodeObject::Bytecode(
                                 packed_bytecode.clone(),
                             ),
                             source_map: None,
@@ -498,7 +498,7 @@ impl ZkSolc {
                         }),
                         deployed_bytecode: Some(CompactDeployedBytecode {
                             bytecode: Some(CompactBytecode {
-                                object: ethers_solc::artifacts::BytecodeObject::Bytecode(
+                                object: BytecodeObject::Bytecode(
                                     packed_bytecode,
                                 ),
                                 source_map: None,

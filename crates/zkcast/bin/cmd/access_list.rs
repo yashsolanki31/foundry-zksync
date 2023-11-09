@@ -1,3 +1,4 @@
+use zkcast::{Cast, TxBuilder};
 use clap::Parser;
 use ethers::{
     providers::Middleware,
@@ -9,8 +10,8 @@ use foundry_cli::{
     utils,
 };
 use foundry_config::{Chain, Config};
+use foundry_utils::types::ToEthers;
 use std::str::FromStr;
-use zkcast::{Cast, TxBuilder};
 
 /// CLI arguments for `cast access-list`.
 #[derive(Debug, Parser)]
@@ -65,7 +66,8 @@ impl AccessListArgs {
         let chain = utils::get_chain(config.chain_id, &provider).await?;
         let sender = eth.wallet.sender().await;
 
-        access_list(&provider, sender, to, sig, args, data, tx, chain, block, to_json).await?;
+        access_list(&provider, sender.to_ethers(), to, sig, args, data, tx, chain, block, to_json)
+            .await?;
         Ok(())
     }
 }

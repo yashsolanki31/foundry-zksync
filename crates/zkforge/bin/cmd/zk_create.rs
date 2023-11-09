@@ -1,9 +1,10 @@
 use clap::{Parser, ValueHint};
 use ethers::{
     abi::Abi,
-    solc::{info::ContractInfo, Project},
+    solc::{info::ContractInfo},
     types::Bytes,
 };
+use foundry_compilers::Project;
 use eyre::Context;
 /// ZKSync Contract Deployment Module
 /// This module encapsulates the logic required for contract deployment, including:

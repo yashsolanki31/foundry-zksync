@@ -1,11 +1,11 @@
 //! Tests for reproducing issues
 
-use crate::{
-    config::*,
-    test_helpers::{filter::Filter, PROJECT},
-};
-use ethers::abi::{Address, Event, EventParam, Log, LogParam, ParamType, RawLog, Token};
+use crate::{config::*, test_helpers::PROJECT};
+use alloy_primitives::Address;
+use ethers::abi::{Event, EventParam, Log, LogParam, ParamType, RawLog, Token};
+use zkforge::result::TestStatus;
 use foundry_config::{fs_permissions::PathPermission, Config, FsPermissions};
+use foundry_test_utils::Filter;
 use std::str::FromStr;
 
 /// A macro that tests a single pattern (".*/repros/<issue>")
@@ -300,4 +300,26 @@ async fn test_issue_6006() {
 #[tokio::test(flavor = "multi_thread")]
 async fn test_issue_5808() {
     test_repro!("Issue5808");
+}
+
+// <https://github.com/foundry-rs/foundry/issues/6115>
+#[tokio::test(flavor = "multi_thread")]
+async fn test_issue_6115() {
+    test_repro!("Issue6115");
+}
+
+// <https://github.com/foundry-rs/foundry/issues/6170>
+#[tokio::test(flavor = "multi_thread")]
+async fn test_issue_6170() {
+    let mut res = run_test_repro!("Issue6170");
+    let mut res = res.remove("repros/Issue6170.t.sol:Issue6170Test").unwrap();
+    let test = res.test_results.remove("test()").unwrap();
+    assert_eq!(test.status, TestStatus::Failure);
+    assert_eq!(test.reason, Some("log != expected log".to_string()));
+}
+
+// <https://github.com/foundry-rs/foundry/issues/6180>
+#[tokio::test(flavor = "multi_thread")]
+async fn test_issue_6180() {
+    test_repro!("Issue6180");
 }

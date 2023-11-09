@@ -1,18 +1,15 @@
 //! Contains various tests for checking forge's commands
 
 use crate::constants::*;
-use ethers::{
-    prelude::remappings::Remapping,
-    solc::{
-        artifacts::{BytecodeHash, Metadata},
-        ConfigurableContractArtifact,
-    },
+use foundry_compilers::{
+    artifacts::{BytecodeHash, Metadata},
+    remappings::Remapping,
+    ConfigurableContractArtifact,
 };
 use foundry_config::{parse_with_profile, BasicConfig, Chain, Config, SolidityErrorCode};
 use foundry_test_utils::{
-    ethers_solc::PathStyle,
-    forgetest, forgetest_init,
-    util::{pretty_err, read_string, OutputExt, TestCommand, TestProject},
+    foundry_compilers::PathStyle,
+    util::{pretty_err, read_string, OutputExt, TestCommand},
 };
 use semver::Version;
 use std::{
@@ -23,13 +20,13 @@ use std::{
 };
 
 // tests `--help` is printed to std out
-forgetest!(print_help, |_: TestProject, mut cmd: TestCommand| {
+forgetest!(print_help, |_prj, cmd| {
     cmd.arg("--help");
     cmd.assert_non_empty_stdout();
 });
 
 // checks that `clean` can be invoked even if out and cache don't exist
-forgetest!(can_clean_non_existing, |prj: TestProject, mut cmd: TestCommand| {
+forgetest!(can_clean_non_existing, |prj, cmd| {
     cmd.arg("clean");
     cmd.assert_empty_stdout();
     prj.assert_cleaned();
@@ -39,7 +36,7 @@ forgetest!(can_clean_non_existing, |prj: TestProject, mut cmd: TestCommand| {
 forgetest!(
     #[ignore]
     can_cache_ls,
-    |_: TestProject, mut cmd: TestCommand| {
+    |_prj, cmd| {
         let chain = Chain::Named(ethers::prelude::Chain::Mainnet);
         let block1 = 100;
         let block2 = 101;
@@ -77,7 +74,7 @@ forgetest!(
 forgetest!(
     #[ignore]
     can_cache_clean,
-    |_: TestProject, mut cmd: TestCommand| {
+    |_prj, cmd| {
         let cache_dir = Config::foundry_cache_dir().unwrap();
         let path = cache_dir.as_path();
         fs::create_dir_all(path).unwrap();
@@ -93,7 +90,7 @@ forgetest!(
 forgetest!(
     #[ignore]
     can_cache_clean_etherscan,
-    |_: TestProject, mut cmd: TestCommand| {
+    |_prj, cmd| {
         let cache_dir = Config::foundry_cache_dir().unwrap();
         let etherscan_cache_dir = Config::foundry_etherscan_cache_dir().unwrap();
         let path = cache_dir.as_path();
@@ -114,7 +111,7 @@ forgetest!(
 forgetest!(
     #[ignore]
     can_cache_clean_all_etherscan,
-    |_: TestProject, mut cmd: TestCommand| {
+    |_prj, cmd| {
         let rpc_cache_dir = Config::foundry_rpc_cache_dir().unwrap();
         let etherscan_cache_dir = Config::foundry_etherscan_cache_dir().unwrap();
         let rpc_path = rpc_cache_dir.as_path();
@@ -136,7 +133,7 @@ forgetest!(
 forgetest!(
     #[ignore]
     can_cache_clean_chain,
-    |_: TestProject, mut cmd: TestCommand| {
+    |_prj, cmd| {
         let chain = Chain::Named(ethers::prelude::Chain::Mainnet);
         let cache_dir = Config::foundry_chain_cache_dir(chain).unwrap();
         let etherscan_cache_dir = Config::foundry_etherscan_chain_cache_dir(chain).unwrap();
@@ -159,7 +156,7 @@ forgetest!(
 forgetest!(
     #[ignore]
     can_cache_clean_blocks,
-    |_: TestProject, mut cmd: TestCommand| {
+    |_prj, cmd| {
         let chain = Chain::Named(ethers::prelude::Chain::Mainnet);
         let block1 = 100;
         let block2 = 101;
@@ -193,7 +190,7 @@ forgetest!(
 forgetest!(
     #[ignore]
     can_cache_clean_chain_etherscan,
-    |_: TestProject, mut cmd: TestCommand| {
+    |_prj, cmd| {
         let cache_dir =
             Config::foundry_chain_cache_dir(Chain::Named(ethers::prelude::Chain::Mainnet)).unwrap();
         let etherscan_cache_dir = Config::foundry_etherscan_chain_cache_dir(Chain::Named(
@@ -215,7 +212,7 @@ forgetest!(
 );
 
 // checks that init works
-forgetest!(can_init_repo_with_config, |prj: TestProject, mut cmd: TestCommand| {
+forgetest!(can_init_repo_with_config, |prj, cmd| {
     let foundry_toml = prj.root().join(Config::FILE_NAME);
     assert!(!foundry_toml.exists());
 
@@ -227,7 +224,7 @@ forgetest!(can_init_repo_with_config, |prj: TestProject, mut cmd: TestCommand| {
 });
 
 // Checks that a forge project fails to initialise if dir is already git repo and dirty
-forgetest!(can_detect_dirty_git_status_on_init, |prj: TestProject, mut cmd: TestCommand| {
+forgetest!(can_detect_dirty_git_status_on_init, |prj, cmd| {
     prj.wipe();
 
     // initialize new git repo
@@ -251,7 +248,7 @@ forgetest!(can_detect_dirty_git_status_on_init, |prj: TestProject, mut cmd: Test
 });
 
 // Checks that a forge project can be initialized without creating a git repository
-forgetest!(can_init_no_git, |prj: TestProject, mut cmd: TestCommand| {
+forgetest!(can_init_no_git, |prj, cmd| {
     prj.wipe();
 
     cmd.arg("init").arg(prj.root()).arg("--no-git");
@@ -264,7 +261,7 @@ forgetest!(can_init_no_git, |prj: TestProject, mut cmd: TestCommand| {
 });
 
 // Checks that quiet mode does not print anything
-forgetest!(can_init_quiet, |prj: TestProject, mut cmd: TestCommand| {
+forgetest!(can_init_quiet, |prj, cmd| {
     prj.wipe();
 
     cmd.arg("init").arg(prj.root()).arg("-q");
@@ -272,7 +269,7 @@ forgetest!(can_init_quiet, |prj: TestProject, mut cmd: TestCommand| {
 });
 
 // `forge init foobar` works with dir argument
-forgetest!(can_init_with_dir, |prj: TestProject, mut cmd: TestCommand| {
+forgetest!(can_init_with_dir, |prj, cmd| {
     prj.create_file("README.md", "non-empty dir");
     cmd.args(["init", "foobar"]);
 
@@ -280,8 +277,44 @@ forgetest!(can_init_with_dir, |prj: TestProject, mut cmd: TestCommand| {
     assert!(prj.root().join("foobar").exists());
 });
 
+// `forge init foobar --template [template]` works with dir argument
+forgetest!(can_init_with_dir_and_template, |prj, cmd| {
+    cmd.args(["init", "foobar", "--template", "foundry-rs/forge-template"]);
+
+    cmd.assert_success();
+    cmd.assert_non_empty_stdout();
+    assert!(prj.root().join("foobar/.git").exists());
+    assert!(prj.root().join("foobar/foundry.toml").exists());
+    assert!(prj.root().join("foobar/lib/forge-std").exists());
+    // assert that gitmodules were correctly initialized
+    assert!(prj.root().join("foobar/.git/modules").exists());
+    assert!(prj.root().join("foobar/src").exists());
+    assert!(prj.root().join("foobar/test").exists());
+});
+
+// `forge init foobar --template [template] --branch [branch]` works with dir argument
+forgetest!(can_init_with_dir_and_template_and_branch, |prj, cmd| {
+    cmd.args([
+        "init",
+        "foobar",
+        "--template",
+        "foundry-rs/forge-template",
+        "--branch",
+        "test/deployments",
+    ]);
+
+    cmd.assert_success();
+    cmd.assert_non_empty_stdout();
+    assert!(prj.root().join("foobar/.dapprc").exists());
+    assert!(prj.root().join("foobar/lib/ds-test").exists());
+    // assert that gitmodules were correctly initialized
+    assert!(prj.root().join("foobar/.git/modules").exists());
+    assert!(prj.root().join("foobar/src").exists());
+    assert!(prj.root().join("foobar/scripts").exists());
+});
+
 // `forge init --force` works on non-empty dirs
-forgetest!(can_init_non_empty, |prj: TestProject, mut cmd: TestCommand| {
+forgetest!(can_init_non_empty, |prj, cmd| {
     prj.create_file("README.md", "non-empty dir");
     cmd.arg("init").arg(prj.root());
     cmd.assert_err();
@@ -293,7 +326,7 @@ forgetest!(can_init_non_empty, |prj: TestProject, mut cmd: TestCommand| {
 });
 
 // `forge init --force` works on already initialized git repository
-forgetest!(can_init_in_empty_repo, |prj: TestProject, mut cmd: TestCommand| {
+forgetest!(can_init_in_empty_repo, |prj, cmd| {
     let root = prj.root();
 
     // initialize new git repo
@@ -316,7 +349,7 @@ forgetest!(can_init_in_empty_repo, |prj: TestProject, mut cmd: TestCommand| {
 });
 
 // `forge init --force` works on already initialized git repository
-forgetest!(can_init_in_non_empty_repo, |prj: TestProject, mut cmd: TestCommand| {
+forgetest!(can_init_in_non_empty_repo, |prj, cmd| {
     let root = prj.root();
 
     // initialize new git repo
@@ -347,7 +380,7 @@ forgetest!(can_init_in_non_empty_repo, |prj: TestProject, mut cmd: TestCommand| 
 });
 
 // Checks that remappings.txt and .vscode/settings.json is generated
-forgetest!(can_init_vscode, |prj: TestProject, mut cmd: TestCommand| {
+forgetest!(can_init_vscode, |prj, cmd| {
     prj.wipe();
 
     cmd.arg("init").arg(prj.root()).arg("--vscode");
@@ -355,7 +388,7 @@ forgetest!(can_init_vscode, |prj: TestProject, mut cmd: TestCommand| {
 
     let settings = prj.root().join(".vscode/settings.json");
     assert!(settings.is_file());
-    let settings: serde_json::Value = ethers::solc::utils::read_json_file(&settings).unwrap();
+    let settings: serde_json::Value = foundry_compilers::utils::read_json_file(&settings).unwrap();
     assert_eq!(
         settings,
         serde_json::json!({
@@ -371,7 +404,7 @@ forgetest!(can_init_vscode, |prj: TestProject, mut cmd: TestCommand| {
 });
 
 // checks that forge can init with template
-forgetest!(can_init_template, |prj: TestProject, mut cmd: TestCommand| {
+forgetest!(can_init_template, |prj, cmd| {
     prj.wipe();
     cmd.args(["init", "--template", "foundry-rs/forge-template"]).arg(prj.root());
     cmd.assert_non_empty_stdout();
@@ -385,7 +418,7 @@ forgetest!(can_init_template, |prj: TestProject, mut cmd: TestCommand| {
 });
 
 // checks that forge can init with template and branch
-forgetest!(can_init_template_with_branch, |prj: TestProject, mut cmd: TestCommand| {
+forgetest!(can_init_template_with_branch, |prj, cmd| {
     prj.wipe();
     cmd.args(["init", "--template", "foundry-rs/forge-template", "--branch", "test/deployments"])
         .arg(prj.root());
@@ -400,14 +433,14 @@ forgetest!(can_init_template_with_branch, |prj: TestProject, mut cmd: TestComman
 });
 
 // checks that init fails when the provided template doesn't exist
-forgetest!(fail_init_nonexistent_template, |prj: TestProject, mut cmd: TestCommand| {
+forgetest!(fail_init_nonexistent_template, |prj, cmd| {
     prj.wipe();
     cmd.args(["init", "--template", "a"]).arg(prj.root());
     cmd.assert_non_empty_stderr();
 });
 
 // checks that `clean` removes dapptools style paths
-forgetest!(can_clean, |prj: TestProject, mut cmd: TestCommand| {
+forgetest!(can_clean, |prj, cmd| {
     prj.assert_create_dirs_exists();
     prj.assert_style_paths_exist(PathStyle::Dapptools);
     cmd.arg("clean");
@@ -416,7 +449,7 @@ forgetest!(can_clean, |prj: TestProject, mut cmd: TestCommand| {
 });
 
 // checks that `clean` removes hardhat style paths
-forgetest!(can_clean_hardhat, PathStyle::HardHat, |prj: TestProject, mut cmd: TestCommand| {
+forgetest!(can_clean_hardhat, PathStyle::HardHat, |prj, cmd| {
     prj.assert_create_dirs_exists();
     prj.assert_style_paths_exist(PathStyle::HardHat);
     cmd.arg("clean");
@@ -425,7 +458,7 @@ forgetest!(can_clean_hardhat, PathStyle::HardHat, |prj: TestProject, mut cmd: Te
 });
 
 // checks that `clean` also works with the "out" value set in Config
-forgetest_init!(can_clean_config, |prj: TestProject, mut cmd: TestCommand| {
+forgetest_init!(can_clean_config, |prj, cmd| {
     let config = Config { out: "custom-out".into(), ..Default::default() };
     prj.write_config(config);
     cmd.arg("build");
@@ -441,13 +474,13 @@ forgetest_init!(can_clean_config, |prj: TestProject, mut cmd: TestCommand| {
 });
 
 // checks that extra output works
-forgetest_init!(can_emit_extra_output, |prj: TestProject, mut cmd: TestCommand| {
+forgetest_init!(can_emit_extra_output, |prj, cmd| {
     cmd.args(["build", "--extra-output", "metadata"]);
     cmd.assert_non_empty_stdout();
 
     let artifact_path = prj.paths().artifacts.join(TEMPLATE_CONTRACT_ARTIFACT_JSON);
     let artifact: ConfigurableContractArtifact =
-        ethers::solc::utils::read_json_file(artifact_path).unwrap();
+        foundry_compilers::utils::read_json_file(artifact_path).unwrap();
     assert!(artifact.metadata.is_some());
 
     cmd.forge_fuse().args(["build", "--extra-output-files", "metadata", "--force"]).root_arg();
@@ -455,17 +488,17 @@ forgetest_init!(can_emit_extra_output, |prj: TestProject, mut cmd: TestCommand| 
 
     let metadata_path =
         prj.paths().artifacts.join(format!("{TEMPLATE_CONTRACT_ARTIFACT_BASE}.metadata.json"));
-    let _artifact: Metadata = ethers::solc::utils::read_json_file(metadata_path).unwrap();
+    let _artifact: Metadata = foundry_compilers::utils::read_json_file(metadata_path).unwrap();
 });
 
 // checks that extra output works
-forgetest_init!(can_emit_multiple_extra_output, |prj: TestProject, mut cmd: TestCommand| {
+forgetest_init!(can_emit_multiple_extra_output, |prj, cmd| {
     cmd.args(["build", "--extra-output", "metadata", "ir-optimized", "--extra-output", "ir"]);
     cmd.assert_non_empty_stdout();
 
     let artifact_path = prj.paths().artifacts.join(TEMPLATE_CONTRACT_ARTIFACT_JSON);
     let artifact: ConfigurableContractArtifact =
-        ethers::solc::utils::read_json_file(artifact_path).unwrap();
+        foundry_compilers::utils::read_json_file(artifact_path).unwrap();
     assert!(artifact.metadata.is_some());
     assert!(artifact.ir.is_some());
     assert!(artifact.ir_optimized.is_some());
@@ -484,7 +517,7 @@ forgetest_init!(can_emit_multiple_extra_output, |prj: TestProject, mut cmd: Test
 
     let metadata_path =
         prj.paths().artifacts.join(format!("{TEMPLATE_CONTRACT_ARTIFACT_BASE}.metadata.json"));
-    let _artifact: Metadata = ethers::solc::utils::read_json_file(metadata_path).unwrap();
+    let _artifact: Metadata = foundry_compilers::utils::read_json_file(metadata_path).unwrap();
 
     let iropt = prj.paths().artifacts.join(format!("{TEMPLATE_CONTRACT_ARTIFACT_BASE}.iropt"));
     std::fs::read_to_string(iropt).unwrap();
@@ -494,7 +527,7 @@ forgetest_init!(can_emit_multiple_extra_output, |prj: TestProject, mut cmd: Test
     std::fs::read_to_string(sourcemap).unwrap();
 });
 
-forgetest!(can_print_warnings, |prj: TestProject, mut cmd: TestCommand| {
+forgetest!(can_print_warnings, |prj, cmd| {
     prj.inner()
         .add_source(
             "Foo",
@@ -542,7 +575,7 @@ Warning (5667): Warning: Unused function parameter. Remove or comment out the va
 // 15 |         FooLib.check2(this);
 //    |                       ^^^^
 #[cfg(not(target_os = "windows"))]
-forgetest!(can_handle_direct_imports_into_src, |prj: TestProject, mut cmd: TestCommand| {
+forgetest!(can_handle_direct_imports_into_src, |prj, cmd| {
     prj.inner()
         .add_source(
             "Foo",
@@ -592,7 +625,7 @@ Compiler run successful!
 });
 
 // tests that the `inspect` command works correctly
-forgetest!(can_execute_inspect_command, |prj: TestProject, mut cmd: TestCommand| {
+forgetest!(can_execute_inspect_command, |prj, cmd| {
     // explicitly set to include the ipfs bytecode hash
     let config = Config { bytecode_hash: BytecodeHash::Ipfs, ..Default::default() };
     prj.write_config(config);
@@ -637,7 +670,7 @@ contract Foo {
 forgetest!(
     #[serial_test::serial]
     can_check_snapshot,
-    |prj: TestProject, mut cmd: TestCommand| {
+    |prj, cmd| {
         prj.insert_ds_test();
 
         prj.inner()
@@ -669,7 +702,7 @@ contract ATest is DSTest {
 );
 
 // test that `forge build` does not print `(with warnings)` if there arent any
-forgetest!(can_compile_without_warnings, |prj: TestProject, mut cmd: TestCommand| {
+forgetest!(can_compile_without_warnings, |prj, cmd| {
     let config = Config {
         ignored_error_codes: vec![SolidityErrorCode::SpdxLicenseNotProvided],
         ..Default::default()
@@ -688,7 +721,7 @@ contract A {
         .unwrap();
 
     cmd.args(["build", "--force"]);
-    let out = cmd.stdout();
+    let out = cmd.stdout_lossy();
     // no warnings
     assert!(out.trim().contains("Compiler run successful!"));
     assert!(!out.trim().contains("Compiler run successful with warnings:"));
@@ -696,7 +729,7 @@ contract A {
     // don't ignore errors
     let config = Config { ignored_error_codes: vec![], ..Default::default() };
     prj.write_config(config);
-    let out = cmd.stdout();
+    let out = cmd.stdout_lossy();
 
     assert!(out.trim().contains("Compiler run successful with warnings:"));
     assert!(
@@ -708,7 +741,7 @@ contract A {
 
 // test that `forge build` compiles when severity set to error, fails when set to warning, and
 // handles ignored error codes as an exception
-forgetest!(can_fail_compile_with_warnings, |prj: TestProject, mut cmd: TestCommand| {
+forgetest!(can_fail_compile_with_warnings, |prj, cmd| {
     let config = Config { ignored_error_codes: vec![], deny_warnings: false, ..Default::default() };
     prj.write_config(config);
     prj.inner()
@@ -724,7 +757,7 @@ contract A {
         .unwrap();
 
     cmd.args(["build", "--force"]);
-    let out = cmd.stdout();
+    let out = cmd.stdout_lossy();
     // there are no errors
     assert!(out.trim().contains("Compiler run successful"));
     assert!(out.trim().contains("Compiler run successful with warnings:"));
@@ -741,7 +774,7 @@ contract A {
         ..Default::default()
     };
     prj.write_config(config);
-    let out = cmd.stdout();
+    let out = cmd.stdout_lossy();
 
     assert!(out.trim().contains("Compiler run successful!"));
     assert!(!out.trim().contains("Compiler run successful with warnings:"));
@@ -751,7 +784,7 @@ contract A {
 forgetest!(
     #[ignore]
     can_compile_local_spells,
-    |_: TestProject, mut cmd: TestCommand| {
+    |_prj, cmd| {
         let current_dir = std::env::current_dir().unwrap();
         let root = current_dir
             .join("../../foundry-integration-tests/testdata/spells-mainnet")
@@ -779,7 +812,7 @@ forgetest!(
 );
 
 // test that a failing `forge build` does not impact followup builds
-forgetest!(can_build_after_failure, |prj: TestProject, mut cmd: TestCommand| {
+forgetest!(can_build_after_failure, |prj, cmd| {
     prj.insert_ds_test();
 
     prj.inner()
@@ -878,7 +911,7 @@ contract CTest is DSTest {
 });
 
 // test to check that install/remove works properly
-forgetest!(can_install_and_remove, |prj: TestProject, mut cmd: TestCommand| {
+forgetest!(can_install_and_remove, |prj, cmd| {
     cmd.git_init();
 
     let libs = prj.root().join("lib");
@@ -916,7 +949,7 @@ forgetest!(can_install_and_remove, |prj: TestProject, mut cmd: TestCommand| {
 });
 
 // test to check that package can be reinstalled after manually removing the directory
-forgetest!(can_reinstall_after_manual_remove, |prj: TestProject, mut cmd: TestCommand| {
+forgetest!(can_reinstall_after_manual_remove, |prj, cmd| {
     cmd.git_init();
 
     let libs = prj.root().join("lib");
@@ -944,7 +977,7 @@ forgetest!(can_reinstall_after_manual_remove, |prj: TestProject, mut cmd: TestCo
 });
 
 // test that we can repeatedly install the same dependency without changes
-forgetest!(can_install_repeatedly, |_prj: TestProject, mut cmd: TestCommand| {
+forgetest!(can_install_repeatedly, |_prj, cmd| {
     cmd.git_init();
 
     cmd.forge_fuse().args(["install", "foundry-rs/forge-std"]);
@@ -955,7 +988,7 @@ forgetest!(can_install_repeatedly, |_prj: TestProject, mut cmd: TestCommand| {
 
 // test that by default we install the latest semver release tag
 // <https://github.com/openzeppelin/openzeppelin-contracts>
-forgetest!(can_install_latest_release_tag, |prj: TestProject, mut cmd: TestCommand| {
+forgetest!(can_install_latest_release_tag, |prj, cmd| {
     cmd.git_init();
     cmd.forge_fuse().args(["install", "openzeppelin/openzeppelin-contracts"]);
     cmd.assert_success();
@@ -975,53 +1008,74 @@ forgetest!(can_install_latest_release_tag, |prj: TestProject, mut cmd: TestComma
 // Tests that forge update doesn't break a working dependency by recursively updating nested
 // dependencies
 forgetest!(
-    #[ignore]
+    #[cfg_attr(windows, ignore = "weird git fail")]
     can_update_library_with_outdated_nested_dependency,
-    |prj: TestProject, mut cmd: TestCommand| {
+    |prj, cmd| {
         cmd.git_init();
 
         let libs = prj.root().join("lib");
         let git_mod = prj.root().join(".git/modules/lib");
         let git_mod_file = prj.root().join(".gitmodules");
 
-        let package = libs.join("issue-2264-repro");
-        let package_mod = git_mod.join("issue-2264-repro");
+        // get paths to check inside install fn
+        let package = libs.join("forge-5980-test");
+        let package_mod = git_mod.join("forge-5980-test");
 
-        let install = |cmd: &mut TestCommand| {
-            cmd.forge_fuse().args(["install", "foundry-rs/issue-2264-repro", "--no-commit"]);
-            cmd.assert_non_empty_stdout();
-            assert!(package.exists());
-            assert!(package_mod.exists());
+        // install main dependency
+        cmd.forge_fuse().args(["install", "evalir/forge-5980-test", "--no-commit"]);
+        cmd.assert_non_empty_stdout();
 
-            let submods = read_string(&git_mod_file);
-            assert!(submods.contains("https://github.com/foundry-rs/issue-2264-repro"));
-        };
+        // assert paths exist
+        assert!(package.exists());
+        assert!(package_mod.exists());
 
-        install(&mut cmd);
-        cmd.forge_fuse().args(["update", "lib/issue-2264-repro"]);
+        let submods = read_string(git_mod_file);
+        assert!(submods.contains("https://github.com/evalir/forge-5980-test"));
+
+        // try to update the top-level dependency; there should be no update for this dependency,
+        // but its sub-dependency has upstream (breaking) changes; forge should not attempt to
+        // update the sub-dependency
+        cmd.forge_fuse().args(["update", "lib/forge-5980-test"]);
         cmd.stdout_lossy();
 
+        // add explicit remappings for test file
+        let config = Config {
+            remappings: vec![
+                Remapping::from_str("forge-5980-test/=lib/forge-5980-test/src/").unwrap().into(),
+                // explicit remapping for sub-dependendy seems necessary for some reason
+                Remapping::from_str(
+                    "forge-5980-test-dep/=lib/forge-5980-test/lib/forge-5980-test-dep/src/",
+                )
+                .unwrap()
+                .into(),
+            ],
+            ..Default::default()
+        };
+        prj.write_config(config);
+
+        // create test file that uses the top-level dependency; if the sub-dependency is updated,
+        // compilation will fail
         prj.inner()
             .add_source(
-                "MyTokenCopy",
+                "CounterCopy",
                 r#"
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.6.0;
-import "issue-2264-repro/MyToken.sol";
-contract MyTokenCopy is MyToken {
+pragma solidity ^0.8.0;
+import "forge-5980-test/Counter.sol";
+contract CounterCopy is Counter {
 }
    "#,
             )
             .unwrap();
 
-        cmd.forge_fuse().args(["build"]);
+        // build and check output
+        cmd.forge_fuse().arg("build");
         let output = cmd.stdout_lossy();
-
         assert!(output.contains("Compiler run successful",));
     }
 );
 
-forgetest!(gas_report_all_contracts, |prj: TestProject, mut cmd: TestCommand| {
+forgetest!(gas_report_all_contracts, |prj, cmd| {
     prj.insert_ds_test();
     prj.inner()
         .add_source(
@@ -1121,21 +1175,21 @@ contract ContractThreeTest is DSTest {
         ..Default::default()
     });
     cmd.forge_fuse();
-    let first_out = cmd.arg("test").arg("--gas-report").stdout();
+    let first_out = cmd.arg("test").arg("--gas-report").stdout_lossy();
     assert!(first_out.contains("foo") && first_out.contains("bar") && first_out.contains("baz"));
     // cmd.arg("test").arg("--gas-report").print_output();
 
     cmd.forge_fuse();
     prj.write_config(Config { gas_reports: (vec![]), ..Default::default() });
     cmd.forge_fuse();
-    let second_out = cmd.arg("test").arg("--gas-report").stdout();
+    let second_out = cmd.arg("test").arg("--gas-report").stdout_lossy();
     assert!(second_out.contains("foo") && second_out.contains("bar") && second_out.contains("baz"));
     // cmd.arg("test").arg("--gas-report").print_output();
 
     cmd.forge_fuse();
     prj.write_config(Config { gas_reports: (vec!["*".to_string()]), ..Default::default() });
     cmd.forge_fuse();
-    let third_out = cmd.arg("test").arg("--gas-report").stdout();
+    let third_out = cmd.arg("test").arg("--gas-report").stdout_lossy();
     assert!(third_out.contains("foo") && third_out.contains("bar") && third_out.contains("baz"));
     // cmd.arg("test").arg("--gas-report").print_output();
 
@@ -1149,12 +1203,12 @@ contract ContractThreeTest is DSTest {
         ..Default::default()
     });
     cmd.forge_fuse();
-    let fourth_out = cmd.arg("test").arg("--gas-report").stdout();
+    let fourth_out = cmd.arg("test").arg("--gas-report").stdout_lossy();
     assert!(fourth_out.contains("foo") && fourth_out.contains("bar") && fourth_out.contains("baz"));
     // cmd.arg("test").arg("--gas-report").print_output();
 });
 
-forgetest!(gas_report_some_contracts, |prj: TestProject, mut cmd: TestCommand| {
+forgetest!(gas_report_some_contracts, |prj, cmd| {
     prj.insert_ds_test();
     prj.inner()
         .add_source(
@@ -1254,7 +1308,7 @@ contract ContractThreeTest is DSTest {
         ..Default::default()
     });
     cmd.forge_fuse();
-    let first_out = cmd.arg("test").arg("--gas-report").stdout();
+    let first_out = cmd.arg("test").arg("--gas-report").stdout_lossy();
     assert!(first_out.contains("foo") && !first_out.contains("bar") && !first_out.contains("baz"));
     // cmd.arg("test").arg("--gas-report").print_output();
 
@@ -1265,7 +1319,7 @@ contract ContractThreeTest is DSTest {
         ..Default::default()
     });
     cmd.forge_fuse();
-    let second_out = cmd.arg("test").arg("--gas-report").stdout();
+    let second_out = cmd.arg("test").arg("--gas-report").stdout_lossy();
     assert!(
         !second_out.contains("foo") && second_out.contains("bar") && !second_out.contains("baz")
     );
@@ -1278,12 +1332,12 @@ contract ContractThreeTest is DSTest {
         ..Default::default()
     });
     cmd.forge_fuse();
-    let third_out = cmd.arg("test").arg("--gas-report").stdout();
+    let third_out = cmd.arg("test").arg("--gas-report").stdout_lossy();
     assert!(!third_out.contains("foo") && !third_out.contains("bar") && third_out.contains("baz"));
     // cmd.arg("test").arg("--gas-report").print_output();
 });
 
-forgetest!(gas_ignore_some_contracts, |prj: TestProject, mut cmd: TestCommand| {
+forgetest!(gas_ignore_some_contracts, |prj, cmd| {
     prj.insert_ds_test();
     prj.inner()
         .add_source(
@@ -1383,7 +1437,7 @@ contract ContractThreeTest is DSTest {
         ..Default::default()
     });
     cmd.forge_fuse();
-    let first_out = cmd.arg("test").arg("--gas-report").stdout();
+    let first_out = cmd.arg("test").arg("--gas-report").stdout_lossy();
     assert!(!first_out.contains("foo") && first_out.contains("bar") && first_out.contains("baz"));
     // cmd.arg("test").arg("--gas-report").print_output();
 
@@ -1395,7 +1449,7 @@ contract ContractThreeTest is DSTest {
         ..Default::default()
     });
     cmd.forge_fuse();
-    let second_out = cmd.arg("test").arg("--gas-report").stdout();
+    let second_out = cmd.arg("test").arg("--gas-report").stdout_lossy();
     assert!(
         second_out.contains("foo") && !second_out.contains("bar") && second_out.contains("baz")
     );
@@ -1413,11 +1467,11 @@ contract ContractThreeTest is DSTest {
         ..Default::default()
     });
     cmd.forge_fuse();
-    let third_out = cmd.arg("test").arg("--gas-report").stdout();
+    let third_out = cmd.arg("test").arg("--gas-report").stdout_lossy();
     assert!(third_out.contains("foo") && third_out.contains("bar") && third_out.contains("baz"));
 });
 
-forgetest_init!(can_use_absolute_imports, |prj: TestProject, mut cmd: TestCommand| {
+forgetest_init!(can_use_absolute_imports, |prj, cmd| {
     let remapping = prj.paths().libraries[0].join("myDepdendency");
     let config = Config {
         remappings: vec![Remapping::from_str(&format!("myDepdendency/={}", remapping.display()))
@@ -1468,75 +1522,72 @@ forgetest_init!(can_use_absolute_imports, |prj: TestProject, mut cmd: TestComman
 });
 
 // <https://github.com/foundry-rs/foundry/issues/3440>
-forgetest_init!(
-    can_use_absolute_imports_from_test_and_script,
-    |prj: TestProject, mut cmd: TestCommand| {
-        prj.inner()
-            .add_script(
-                "IMyScript.sol",
-                r"
+forgetest_init!(can_use_absolute_imports_from_test_and_script, |prj, cmd| {
+    prj.inner()
+        .add_script(
+            "IMyScript.sol",
+            r"
     pragma solidity ^0.8.10;
 
     interface IMyScript {}
    ",
-            )
-            .unwrap();
+        )
+        .unwrap();
 
-        prj.inner()
-            .add_script(
-                "MyScript.sol",
-                r#"
+    prj.inner()
+        .add_script(
+            "MyScript.sol",
+            r#"
     pragma solidity ^0.8.10;
     import "script/IMyScript.sol";
 
     contract MyScript is IMyScript {}
    "#,
-            )
-            .unwrap();
+        )
+        .unwrap();
 
-        prj.inner()
-            .add_test(
-                "IMyTest.sol",
-                r"
+    prj.inner()
+        .add_test(
+            "IMyTest.sol",
+            r"
     pragma solidity ^0.8.10;
 
     interface IMyTest {}
    ",
-            )
-            .unwrap();
+        )
+        .unwrap();
 
-        prj.inner()
-            .add_test(
-                "MyTest.sol",
-                r#"
+    prj.inner()
+        .add_test(
+            "MyTest.sol",
+            r#"
     pragma solidity ^0.8.10;
     import "test/IMyTest.sol";
 
     contract MyTest is IMyTest {}
    "#,
-            )
-            .unwrap();
+        )
+        .unwrap();
 
-        cmd.arg("build");
-        let stdout = cmd.stdout_lossy();
-        assert!(stdout.contains("Compiler run successful"));
-    }
-);
+    cmd.arg("build");
+    let stdout = cmd.stdout_lossy();
+    assert!(stdout.contains("Compiler run successful"));
+});
 
 // checks `forge inspect <contract> irOptimized works
-forgetest_init!(can_inspect_ir_optimized, |_prj: TestProject, mut cmd: TestCommand| {
+forgetest_init!(can_inspect_ir_optimized, |_prj, cmd| {
     cmd.args(["inspect", TEMPLATE_CONTRACT, "irOptimized"]);
     cmd.assert_success();
 });
 
 // checks forge bind works correctly on the default project
-forgetest_init!(can_bind, |_prj: TestProject, mut cmd: TestCommand| {
+forgetest_init!(can_bind, |_prj, cmd| {
     cmd.arg("bind");
     cmd.assert_non_empty_stdout();
 });
 
 // checks missing dependencies are auto installed
-forgetest_init!(can_install_missing_deps_test, |prj: TestProject, mut cmd: TestCommand| {
+forgetest_init!(can_install_missing_deps_test, |prj, cmd| {
     // wipe forge-std
     let forge_std_dir = prj.root().join("lib/forge-std");
     pretty_err(&forge_std_dir, fs::remove_dir_all(&forge_std_dir));
@@ -1549,7 +1600,7 @@ forgetest_init!(can_install_missing_deps_test, |prj: TestProject, mut cmd: TestC
 });
 
 // checks missing dependencies are auto installed
-forgetest_init!(can_install_missing_deps_build, |prj: TestProject, mut cmd: TestCommand| {
+forgetest_init!(can_install_missing_deps_build, |prj, cmd| {
     // wipe forge-std
     let forge_std_dir = prj.root().join("lib/forge-std");
     pretty_err(&forge_std_dir, fs::remove_dir_all(&forge_std_dir));
@@ -1562,7 +1613,7 @@ forgetest_init!(can_install_missing_deps_build, |prj: TestProject, mut cmd: Test
 });
 
 // checks that extra output works
-forgetest_init!(can_build_skip_contracts, |prj: TestProject, mut cmd: TestCommand| {
+forgetest_init!(can_build_skip_contracts, |prj, cmd| {
     // explicitly set to run with 0.8.17 for consistent output
     let config = Config { solc: Some("0.8.17".into()), ..Default::default() };
     prj.write_config(config);
@@ -1575,13 +1626,13 @@ forgetest_init!(can_build_skip_contracts, |prj: TestProject, mut cmd: TestComman
             .join("tests/fixtures/can_build_skip_contracts.stdout"),
     );
     // re-run command
-    let out = cmd.stdout();
+    let out = cmd.stdout_lossy();
 
     // unchanged
     assert!(out.trim().contains("No files changed, compilation skipped"), "{}", out);
 });
 
-forgetest_init!(can_build_skip_glob, |prj: TestProject, mut cmd: TestCommand| {
+forgetest_init!(can_build_skip_glob, |prj, cmd| {
     // explicitly set to run with 0.8.17 for consistent output
     let config = Config { solc: Some("0.8.17".into()), ..Default::default() };
     prj.write_config(config);
@@ -1605,9 +1656,9 @@ function test_run() external {}
 });
 
 // checks that build --sizes includes all contracts even if unchanged
-forgetest_init!(can_build_sizes_repeatedly, |_prj: TestProject, mut cmd: TestCommand| {
+forgetest_init!(can_build_sizes_repeatedly, |_prj, cmd| {
     cmd.args(["build", "--sizes"]);
-    let out = cmd.stdout();
+    let out = cmd.stdout_lossy();
 
     // contains: Counter    ┆ 0.247     ┆ 24.329
     assert!(out.contains(TEMPLATE_CONTRACT));
@@ -1615,20 +1666,20 @@ forgetest_init!(can_build_sizes_repeatedly, |_prj: TestProject, mut cmd: TestCom
     // get the entire table
     let table = out.split("Compiler run successful!").nth(1).unwrap().trim();
 
-    let unchanged = cmd.stdout();
+    let unchanged = cmd.stdout_lossy();
     assert!(unchanged.contains(table), "{}", table);
 });
 
 // checks that build --names includes all contracts even if unchanged
-forgetest_init!(can_build_names_repeatedly, |_prj: TestProject, mut cmd: TestCommand| {
+forgetest_init!(can_build_names_repeatedly, |_prj, cmd| {
     cmd.args(["build", "--names"]);
-    let out = cmd.stdout();
+    let out = cmd.stdout_lossy();
 
     assert!(out.contains(TEMPLATE_CONTRACT));
 
     // get the entire list
     let list = out.split("Compiler run successful!").nth(1).unwrap().trim();
 
-    let unchanged = cmd.stdout();
+    let unchanged = cmd.stdout_lossy();
     assert!(unchanged.contains(list), "{}", list);
 });

@@ -52,17 +52,8 @@ parking_lot = "0.12"
 futures = "0.3"
 once_cell = "1"
 
-# EVM
-bytes = "1"
-hashbrown = { version = "0.14", features = ["serde"] }
-
+# zkSync
 era_revm = { workspace = true }
-
-# Fuzzer
-proptest = "1"
-
-# Display
-yansi = "0.5"
 
 # Misc
 url = "2"

@@ -1,29 +1,42 @@
 use self::{build::BuildOutput, runner::ScriptRunner};
 use super::{build::BuildArgs, retry::RetryArgs};
+use alloy_dyn_abi::FunctionExt;
+use alloy_json_abi::{Function, InternalType, JsonAbi as Abi};
 use alloy_primitives::{Address, Bytes, U256};
 use clap::{Parser, ValueHint};
 use dialoguer::Confirm;
 use ethers::{
-    abi::{Abi, Function, HumanReadableParser},
-    prelude::{
-        artifacts::{ContractBytecodeSome, Libraries},
-        ArtifactId, Project,
-    },
     providers::{Http, Middleware},
     signers::LocalWallet,
-    solc::contracts::ArtifactContracts,
     types::{
         transaction::eip2718::TypedTransaction, Chain, Log, NameOrAddress, TransactionRequest,
     },
 };
 use eyre::{ContextCompat, Result, WrapErr};
+use zkforge::{
+    backend::Backend,
+    debug::DebugArena,
+    decode::decode_console_logs,
+    opts::EvmOpts,
+    traces::{
+        identifier::{EtherscanIdentifier, LocalTraceIdentifier, SignaturesIdentifier},
+        CallTraceDecoder, CallTraceDecoderBuilder, TraceCallData, TraceKind, TraceRetData, Traces,
+    },
+    utils::CallKind,
+};
 use foundry_cli::opts::MultiWallet;
 use foundry_common::{
-    abi::{encode_args, format_token},
+    abi::encode_function_args,
     contracts::get_contract_name,
     errors::UnlinkedByteCode,
     evm::{Breakpoints, EvmArgs},
+    fmt::format_token,
     shell, ContractsByArtifact, RpcUrl, CONTRACT_MAX_SIZE, SELECTOR_LEN,
+};
+use foundry_compilers::{
+    artifacts::{ContractBytecodeSome, Libraries},
+    contracts::ArtifactContracts,
+    ArtifactId, Project,
 };
 use foundry_config::{
     figment,
@@ -34,28 +47,15 @@ use foundry_config::{
     Config,
 };
 use foundry_evm::{
+    constants::DEFAULT_CREATE2_DEPLOYER,
     decode,
-    executor::inspector::{
-        cheatcodes::{util::BroadcastableTransactions, BroadcastableTransaction},
-        DEFAULT_CREATE2_DEPLOYER,
-    },
+    inspectors::cheatcodes::{BroadcastableTransaction, BroadcastableTransactions},
 };
 use foundry_utils::types::{ToAlloy, ToEthers};
 use futures::future;
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap, HashSet, VecDeque};
 use yansi::Paint;
-use zkforge::{
-    debug::DebugArena,
-    decode::decode_console_logs,
-    executor::{opts::EvmOpts, Backend},
-    trace::{
-        identifier::{EtherscanIdentifier, LocalTraceIdentifier, SignaturesIdentifier},
-        CallTraceDecoder, CallTraceDecoderBuilder, RawOrDecodedCall, RawOrDecodedReturnData,
-        TraceKind, Traces,
-    },
-    CallKind,
-};
 
 mod artifacts;
 mod broadcast;
@@ -69,8 +69,6 @@ mod runner;
 mod sequence;
 pub mod transaction;
 mod verify;
-#[allow(unused_imports)]
-pub use transaction::TransactionWithMetadata;
 
 /// List of Chains that support Shanghai.
 static SHANGHAI_ENABLED_CHAINS: &[Chain] = &[
@@ -115,7 +113,7 @@ pub struct ScriptArgs {
     #[clap(
         long,
         env = "ETH_PRIORITY_GAS_PRICE",
-        value_parser = foundry_cli::utils::alloy_parse_ether_value,
+        value_parser = foundry_cli::utils::parse_ether_value,
         value_name = "PRICE"
     )]
     pub priority_gas_price: Option<U256>,
@@ -192,7 +190,7 @@ pub struct ScriptArgs {
     #[clap(
         long,
         env = "ETH_GAS_PRICE",
-        value_parser = foundry_cli::utils::alloy_parse_ether_value,
+        value_parser = foundry_cli::utils::parse_ether_value,
         value_name = "PRICE",
     )]
     pub with_gas_price: Option<U256>,
@@ -230,9 +228,7 @@ impl ScriptArgs {
 
         let mut local_identifier = LocalTraceIdentifier::new(known_contracts);
         let mut decoder = CallTraceDecoderBuilder::new()
-            .with_labels(
-                result.labeled_addresses.iter().map(|(a, s)| ((*a).to_ethers(), s.clone())),
-            )
+            .with_labels(result.labeled_addresses.clone())
             .with_verbosity(verbosity)
             .with_signature_identifier(SignaturesIdentifier::new(
                 Config::foundry_cache_dir(),
@@ -262,10 +258,14 @@ impl ScriptArgs {
         let func = script_config.called_function.as_ref().expect("There should be a function.");
         let mut returns = HashMap::new();
 
-        match func.decode_output(returned) {
+        match func.abi_decode_output(returned, false) {
             Ok(decoded) => {
                 for (index, (token, output)) in decoded.iter().zip(&func.outputs).enumerate() {
-                    let internal_type = output.internal_type.as_deref().unwrap_or("unknown");
+                    let internal_type =
+                        output.internal_type.clone().unwrap_or(InternalType::Other {
+                            contract: None,
+                            ty: "unknown".to_string(),
+                        });
 
                     let label = if !output.name.is_empty() {
                         output.name.to_string()
@@ -330,10 +330,14 @@ impl ScriptArgs {
 
         if result.success && !result.returned.is_empty() {
             shell::println("\n== Return ==")?;
-            match func.decode_output(&result.returned) {
+            match func.abi_decode_output(&result.returned, false) {
                 Ok(decoded) => {
                     for (index, (token, output)) in decoded.iter().zip(&func.outputs).enumerate() {
-                        let internal_type = output.internal_type.as_deref().unwrap_or("unknown");
+                        let internal_type =
+                            output.internal_type.clone().unwrap_or(InternalType::Other {
+                                contract: None,
+                                ty: "unknown".to_string(),
+                            });
 
                         let label = if !output.name.is_empty() {
                             output.name.to_string()
@@ -362,11 +366,10 @@ impl ScriptArgs {
         }
 
         if !result.success {
-            let revert_msg = decode::decode_revert(&result.returned[..], None, None)
-                .map(|err| format!("{err}\n"))
-                .unwrap_or_else(|_| "Script failed.\n".to_string());
-
-            eyre::bail!("{}", Paint::red(revert_msg));
+            return Err(eyre::eyre!(
+                "script failed: {}",
+                decode::decode_revert(&result.returned[..], None, None)
+            ))
         }
 
         Ok(())
@@ -452,21 +455,18 @@ impl ScriptArgs {
     ///
     /// Note: We assume that the `sig` is already stripped of its prefix, See [`ScriptArgs`]
     pub fn get_method_and_calldata(&self, abi: &Abi) -> Result<(Function, Bytes)> {
-        let (func, data) = if let Ok(func) = HumanReadableParser::parse_function(&self.sig) {
+        let (func, data) = if let Ok(func) = Function::parse(&self.sig) {
             (
-                abi.functions()
-                    .find(|&abi_func| abi_func.short_signature() == func.short_signature())
-                    .wrap_err(format!(
-                        "Function `{}` is not implemented in your script.",
-                        self.sig
-                    ))?,
-                encode_args(&func, &self.args)?.into(),
+                abi.functions().find(|&abi_func| abi_func.selector() == func.selector()).wrap_err(
+                    format!("Function `{}` is not implemented in your script.", self.sig),
+                )?,
+                encode_function_args(&func, &self.args)?.into(),
             )
         } else {
             let decoded = hex::decode(&self.sig).wrap_err("Invalid hex calldata")?;
             let selector = &decoded[..SELECTOR_LEN];
             (
-                abi.functions().find(|&func| selector == &func.short_signature()[..]).ok_or_else(
+                abi.functions().find(|&func| selector == &func.selector()[..]).ok_or_else(
                     || {
                         eyre::eyre!(
                             "Function selector `{}` not found in the ABI",
@@ -520,9 +520,9 @@ impl ScriptArgs {
         let mut unknown_c = 0usize;
         for node in create_nodes {
             // Calldata == init code
-            if let RawOrDecodedCall::Raw(ref init_code) = node.trace.data {
+            if let TraceCallData::Raw(ref init_code) = node.trace.data {
                 // Output is the runtime code
-                if let RawOrDecodedReturnData::Raw(ref deployed_code) = node.trace.output {
+                if let TraceRetData::Raw(ref deployed_code) = node.trace.output {
                     // Only push if it was not present already
                     if !bytecodes.iter().any(|(_, b, _)| *b == init_code.as_ref()) {
                         bytecodes.push((format!("Unknown{unknown_c}"), init_code, deployed_code));
@@ -741,8 +741,8 @@ mod tests {
     use super::*;
     use foundry_cli::utils::LoadConfig;
     use foundry_config::UnresolvedEnvVarError;
-    use foundry_test_utils::tempfile::tempdir;
     use std::fs;
+    use tempfile::tempdir;
 
     #[test]
     fn can_parse_sig() {

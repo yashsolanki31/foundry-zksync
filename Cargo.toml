@@ -26,6 +26,8 @@ members = [
     "crates/macros/impl/",
     "crates/test-utils/",
     "crates/utils/",
+    "crates/zkcast/",
+    "crates/zkforge/",
 ]
 resolver = "2"
 
@@ -134,30 +136,31 @@ foundry-test-utils = { path = "crates/test-utils" }
 foundry-utils = { path = "crates/utils" }
 
 # block explorer & verification bindings
-foundry-block-explorers = { version = "0.1", default-features = false }
+foundry-block-explorers = { path = "/Users/dustinbrickwood/Documents/dev/dut/forks/block-explorers", default-features = false }
 # solc & compilation utilities
-foundry-compilers = { version = "0.1", default-features = false }
+foundry-compilers = { path = "/Users/dustinbrickwood/Documents/dev/dut/forks/compilers", default-features = false }
 
 ## revm
 # no default features to avoid c-kzg
 # Using a fork of revm as zksync-era requires the usage of sha3 0.10.6, and the latest revm uses 0.10.8
 revm = { version = "3.5.0", default-features = false }
+revm-primitives = { version = "1", default-features = false }
 era_revm = { git="https://github.com/matter-labs/era-revm", rev = "dc04c89902ea317f3b0e68b80765b5634a4f42b2" }
 
 # We use a fork of `ethers` to gain access to a previously private variable.
 # This ensures that all artifact files, freshly compiled and saved in the `output` directory, are publicly accessible.
 # For details on this modification, refer to:
 # https://github.com/mm-zk/ethers-rs/commit/2b2c7312f328a431fa40a7b87a722eaf28e27061
-ethers = { git = "https://github.com/mm-zk/ethers-rs", tag = "main_public_artifact", default-features = false }
-ethers-addressbook = { git = "https://github.com/mm-zk/ethers-rs", tag = "main_public_artifact", default-features = false }
-ethers-core = { git = "https://github.com/mm-zk/ethers-rs", tag = "main_public_artifact", default-features = false }
-ethers-contract = { git = "https://github.com/mm-zk/ethers-rs", tag = "main_public_artifact", default-features = false }
-ethers-contract-abigen = { git = "https://github.com/mm-zk/ethers-rs", tag = "main_public_artifact", default-features = false }
-ethers-providers = { git = "https://github.com/mm-zk/ethers-rs", tag = "main_public_artifact", default-features = false }
-ethers-signers = { git = "https://github.com/mm-zk/ethers-rs", tag = "main_public_artifact", default-features = false }
-ethers-middleware = { git = "https://github.com/mm-zk/ethers-rs", tag = "main_public_artifact", default-features = false }
-ethers-etherscan = { git = "https://github.com/mm-zk/ethers-rs", tag = "main_public_artifact", default-features = false }
-ethers-solc = { git = "https://github.com/mm-zk/ethers-rs", tag = "main_public_artifact", default-features = false }
+ethers = { version = "2.0", default-features = false }
+ethers-addressbook = { version = "2.0", default-features = false }
+ethers-core = { version = "2.0", default-features = false }
+ethers-contract = { version = "2.0", default-features = false }
+ethers-contract-abigen = { version = "2.0", default-features = false }
+ethers-providers = { version = "2.0", default-features = false }
+ethers-signers = { version = "2.0", default-features = false }
+ethers-middleware = { version = "2.0", default-features = false }
+ethers-etherscan = { version = "2.0", default-features = false }
+ethers-solc = { version = "2.0", default-features = false }
 
 ## alloy
 alloy-primitives = "0.4.1"

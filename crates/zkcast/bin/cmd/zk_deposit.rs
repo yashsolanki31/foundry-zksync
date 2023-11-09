@@ -25,6 +25,15 @@ use zksync_web3_rs::{
     DepositRequest, ZKSWallet,
 };
 
+fn convert_to_u256(value: alloy_primitives::Uint<256, 4>) -> ethers_core::types::U256 {
+    let limbs = value.into_limbs();
+    let mut bytes = [0u8; 32];
+    for (i, &limb) in limbs.iter().enumerate() {
+        let byte_index = i * 8;
+        bytes[byte_index..byte_index + 8].copy_from_slice(&limb.to_be_bytes());
+    }
+    ethers_core::types::U256::from_big_endian(&bytes)
+}
 /// Struct to represent the command line arguments for the `cast zk-deposit` command.
 ///
 /// `ZkDepositTxArgs` contains parameters to be passed via the command line for the `cast
@@ -137,8 +146,8 @@ impl ZkDepositTxArgs {
         let deposit_request = DepositRequest::new(self.amount)
             .to(self.get_to_address())
             .operator_tip(self.operator_tip.unwrap_or(0.into()))
-            .gas_price(self.tx.gas_price)
-            .gas_limit(self.tx.gas_limit)
+            .gas_price(self.tx.gas_price.map(convert_to_u256)) 
+            .gas_limit(self.tx.gas_limit.map(convert_to_u256))
             .gas_per_pubdata_byte(self.gas_per_pubdata_byte)
             .l2_gas_limit(self.l2_gas_limit);
 

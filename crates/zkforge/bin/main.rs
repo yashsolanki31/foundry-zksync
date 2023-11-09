@@ -10,8 +10,8 @@ use cmd::{cache::CacheSubcommands, generate::GenerateSubcommands, watch};
 use opts::{Opts, Subcommands};
 
 fn main() -> Result<()> {
-    utils::load_dotenv();
     handler::install()?;
+    utils::load_dotenv();
     utils::subscriber();
     utils::enable_paint();
 
@@ -49,6 +49,7 @@ fn main() -> Result<()> {
             CacheSubcommands::Clean(cmd) => cmd.run(),
             CacheSubcommands::Ls(cmd) => cmd.run(),
         },
+        Subcommands::Create(cmd) => utils::block_on(cmd.run()),
         Subcommands::ZkCreate(cmd) => utils::block_on(cmd.run()),
         Subcommands::Update(cmd) => cmd.run(),
         Subcommands::Install(cmd) => cmd.run(),
@@ -63,7 +64,7 @@ fn main() -> Result<()> {
             clap_complete::generate(
                 clap_complete_fig::Fig,
                 &mut Opts::command(),
-                "zkforge",
+                "forge",
                 &mut std::io::stdout(),
             );
             Ok(())

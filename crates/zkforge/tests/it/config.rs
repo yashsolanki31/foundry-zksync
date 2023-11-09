@@ -1,23 +1,21 @@
 //! Test setup
 
-use crate::test_helpers::{
-    filter::Filter, COMPILED, COMPILED_WITH_LIBS, EVM_OPTS, LIBS_PROJECT, PROJECT,
+use crate::test_helpers::{COMPILED, EVM_OPTS, PROJECT};
+use zkforge::{
+    result::{SuiteResult, TestStatus},
+    MultiContractRunner, MultiContractRunnerBuilder, TestOptions,
 };
 use foundry_config::{
     fs_permissions::PathPermission, Config, FsPermissions, FuzzConfig, FuzzDictionaryConfig,
     InvariantConfig, RpcEndpoint, RpcEndpoints,
 };
 use foundry_evm::{
-    decode::decode_console_logs, executor::inspector::CheatsConfig, revm::primitives::SpecId,
+    decode::decode_console_logs, inspectors::CheatsConfig, revm::primitives::SpecId,
 };
-use foundry_utils::types::ToAlloy;
+use foundry_test_utils::Filter;
 use std::{
     collections::BTreeMap,
     path::{Path, PathBuf},
-};
-use zkforge::{
-    result::{SuiteResult, TestStatus},
-    MultiContractRunner, MultiContractRunnerBuilder, TestOptions,
 };
 
 /// How to execute a a test run
@@ -28,14 +26,13 @@ pub struct TestConfig {
     pub opts: TestOptions,
 }
 
-// === impl TestConfig ===
-
 impl TestConfig {
     pub fn new(runner: MultiContractRunner) -> Self {
         Self::with_filter(runner, Filter::matches_all())
     }
 
     pub fn with_filter(runner: MultiContractRunner, filter: Filter) -> Self {
+        init_tracing();
         Self { runner, should_fail: false, filter, opts: test_opts() }
     }
 
@@ -166,15 +163,14 @@ pub async fn runner_with_config(mut config: Config) -> MultiContractRunner {
     config.rpc_endpoints = rpc_endpoints();
     config.allow_paths.push(manifest_root());
 
+    let root = &PROJECT.paths.root;
+    let opts = &*EVM_OPTS;
+    let env = opts.evm_env().await.expect("could not instantiate fork environment");
+    let output = COMPILED.clone();
     base_runner()
-        .with_cheats_config(CheatsConfig::new(&config, &EVM_OPTS))
-        .sender(config.sender.to_alloy())
-        .build(
-            &PROJECT.paths.root,
-            (*COMPILED).clone(),
-            EVM_OPTS.evm_env().await.expect("Could not instantiate fork environment"),
-            EVM_OPTS.clone(),
-        )
+        .with_cheats_config(CheatsConfig::new(&config, opts.clone()))
+        .sender(config.sender)
+        .build(root, output, env, opts.clone())
         .unwrap()
 }
 
@@ -204,7 +200,7 @@ pub async fn forked_runner(rpc: &str) -> MultiContractRunner {
 
     base_runner()
         .with_fork(fork)
-        .build(&LIBS_PROJECT.paths.root, (*COMPILED_WITH_LIBS).clone(), env, opts)
+        .build(&PROJECT.paths.root, (*COMPILED).clone(), env, opts)
         .unwrap()
 }
 

@@ -17,7 +17,7 @@ use foundry_common::{abi::IntoFunction, evm::Breakpoints};
 use foundry_evm_core::{
     backend::{Backend, DatabaseError, DatabaseExt, DatabaseResult, FuzzBackendWrapper},
     constants::{
-        CALLER, CHEATCODE_ADDRESS, DEFAULT_CREATE2_DEPLOYER, DEFAULT_CREATE2_DEPLOYER_CODE,
+        CALLER, CHEATCODE_ADDRESS,
     },
     debug::DebugArena,
     decode,

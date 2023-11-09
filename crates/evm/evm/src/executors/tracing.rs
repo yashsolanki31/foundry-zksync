@@ -14,7 +14,7 @@ impl TracingExecutor {
     pub async fn new(
         env: revm::primitives::Env,
         fork: Option<CreateFork>,
-        _version: Option<EvmVersion>,
+        version: Option<EvmVersion>,
         debug: bool,
     ) -> Self {
         let db = Backend::spawn(fork).await;
@@ -23,7 +23,7 @@ impl TracingExecutor {
             // tracing will be enabled only for the targeted transaction
             executor: ExecutorBuilder::new()
                 .inspectors(|stack| stack.trace(true).debug(debug))
-                .spec(SpecId::SHANGHAI)
+                .spec(evm_spec_id(&version.unwrap_or_default()))
                 .build(env, db),
         }
     }
