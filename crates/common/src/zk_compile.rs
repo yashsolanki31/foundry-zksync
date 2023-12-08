@@ -55,6 +55,7 @@ use std::{
     path::{Path, PathBuf},
     process::{exit, Command, Stdio},
 };
+use crate::factory_deps;
 
 #[derive(Debug, Clone)]
 pub struct ZkSolcOpts {
@@ -486,7 +487,7 @@ impl ZkSolc {
                         .collect();
 
                     let packed_bytecode = Bytes::from(
-                        era_revm::factory_deps::PackedEraBytecode::new(
+                        factory_deps::PackedEraBytecode::new(
                             contract.hash.as_ref().unwrap().clone(),
                             contract.evm.bytecode.as_ref().unwrap().object.clone(),
                             factory_deps,

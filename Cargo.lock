@@ -3303,15 +3303,18 @@ checksum = "5443807d6dff69373d433ab9ef5378ad8df50ca6298caf15de6e52e24aaf54d5"
 
 [[package]]
 name = "era_revm"
-version = "0.0.1-alpha"
+version = "0.2.0"
 dependencies = [
+ "crossterm",
  "era_test_node",
  "ethabi 18.0.0",
  "ethers",
  "eyre",
- "hashbrown 0.14.2",
+ "foundry-cheatcodes",
+ "foundry-common",
+ "hashbrown 0.11.2",
  "hex",
- "itertools 0.12.0",
+ "itertools 0.11.0",
  "maplit",
  "multivm",
  "revm",
@@ -4243,7 +4246,6 @@ dependencies = [
  "const-hex",
  "dirs 5.0.1",
  "dunce",
- "era_revm",
  "ethers-core",
  "ethers-etherscan",
  "ethers-middleware",
@@ -4253,6 +4255,7 @@ dependencies = [
  "foundry-config",
  "foundry-macros",
  "globset",
+ "multivm",
  "once_cell",
  "regex",
  "reqwest",
@@ -4267,6 +4270,7 @@ dependencies = [
  "walkdir",
  "yansi 0.5.1",
  "zksync-web3-rs",
+ "zksync_basic_types",
 ]
 
 [[package]]
@@ -5831,15 +5835,6 @@ name = "itertools"
 version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b1c173a5686ce8bfa551b3563d0c2170bf24ca44da99c7ca4bfdab5418c3fe57"
-dependencies = [
- "either",
-]
-
-[[package]]
-name = "itertools"
-version = "0.12.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "25db6b064527c5d482d0423354fcd07a89a2dfe07b67892e62411946db7f07b0"
 dependencies = [
  "either",
 ]
@@ -9013,7 +9008,6 @@ dependencies = [
  "enumn",
  "hashbrown 0.14.2",
  "hex",
- "once_cell",
  "serde",
 ]
 

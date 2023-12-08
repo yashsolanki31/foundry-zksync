@@ -34,8 +34,10 @@ use crate::{
         address_to_h160, h160_to_address, h256_to_h160, h256_to_revm_u256, revm_u256_to_u256,
     },
     db::RevmDatabaseForEra,
-    factory_deps::PackedEraBytecode,
 };
+
+use foundry_common::factory_deps::PackedEraBytecode;
+use foundry_cheatcodes::DatabaseExt;
 
 fn contract_address_from_tx_result(execution_result: &VmExecutionResultAndLogs) -> Option<H160> {
     for query in execution_result.logs.storage_logs.iter().rev() {
@@ -130,7 +132,7 @@ pub enum DatabaseError {
 
 pub fn run_era_transaction<DB, E, INSP>(env: &mut Env, db: DB, _inspector: INSP) -> EVMResult<E>
 where
-    DB: Database + Send,
+    DB: DatabaseExt + Send,
     <DB as revm::Database>::Error: Debug,
 {
     let (num, ts) = (env.block.number.to::<u64>(), env.block.timestamp.to::<u64>());
@@ -329,7 +331,7 @@ fn decode_l2_tx_result(output: Vec<u8>) -> Vec<u8> {
 
 #[cfg(test)]
 mod tests {
-    use crate::{factory_deps::hash_bytecode, testing::MockDatabase};
+    use crate::{foundry_common::factory_deps::hash_bytecode, testing::MockDatabase};
 
     use super::*;
 

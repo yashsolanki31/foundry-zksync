@@ -23,6 +23,7 @@ pub mod transactions;
 pub mod zk_compile;
 pub mod zk_utils;
 pub mod zksolc_manager;
+pub mod factory_deps;
 
 pub use constants::*;
 pub use contracts::*;

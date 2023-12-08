@@ -17,7 +17,7 @@ pub use defs::{Cheatcode, CheatcodeDef, Group, Mutability, Safety, Status, Visib
 #[cfg(feature = "impls")]
 pub mod impls;
 #[cfg(feature = "impls")]
-pub use impls::{Cheatcodes, CheatsConfig};
+pub use impls::{Cheatcodes, CheatsConfig, DatabaseExt};
 
 /// The cheatcode handler address.
 ///

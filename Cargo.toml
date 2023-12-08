@@ -156,6 +156,7 @@ ethers-signers = { git = "https://github.com/mm-zk/ethers-rs", tag = "main_publi
 ethers-middleware = { git = "https://github.com/mm-zk/ethers-rs", tag = "main_public_artifact", default-features = false }
 ethers-etherscan = { git = "https://github.com/mm-zk/ethers-rs", tag = "main_public_artifact", default-features = false }
 ethers-solc = { git = "https://github.com/mm-zk/ethers-rs", tag = "main_public_artifact", default-features = false }
+ethabi = "18.0.0"
 
 ## alloy
 alloy-primitives = "0.4.1"
@@ -178,6 +179,11 @@ tracing = "0.1"
 jsonpath_lib = "0.3"
 eyre = "0.6"
 color-eyre = "0.6"
+
+## zksync
+multivm= { git = "https://github.com/matter-labs/zksync-era.git", rev = "bd268ac02bc3530c1d3247cb9496c3e13c2e52d9" }
+zksync_basic_types = { git = "https://github.com/matter-labs/zksync-era.git", rev = "bd268ac02bc3530c1d3247cb9496c3e13c2e52d9" }
+
 
 [patch.crates-io]
 # We use a fork of `ethers` to gain access to a previously private variable.
