@@ -63,7 +63,7 @@ pub fn bytes_to_chunks(bytes: &[u8]) -> Vec<[u8; 32]> {
 
 pub fn hash_bytecode(code: &[u8]) -> H256 {
     let chunked_code = bytes_to_chunks(code);
-    let hash = zk_evm::zkevm_opcode_defs::utils::bytecode_to_code_hash(&chunked_code)
+    let hash = multivm::zk_evm_1_3_3::zkevm_opcode_defs::utils::bytecode_to_code_hash(&chunked_code)
         .expect("Invalid bytecode");
 
     H256(hash)

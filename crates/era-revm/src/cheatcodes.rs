@@ -7,14 +7,13 @@ use itertools::Itertools;
 use multivm::{
     interface::{dyn_tracers::vm_1_3_3::DynTracer, tracer::TracerExecutionStatus},
     vm_refunds_enhancement::{BootloaderState, HistoryMode, SimpleMemory, VmTracer, ZkSyncVmState},
-    zk_evm_1_3_1::zkevm_opcode_defs::RET_IMPLICIT_RETURNDATA_PARAMS_REGISTER,
     zk_evm_1_3_3::{
         tracing::{BeforeExecutionData, VmLocalStateData},
         vm_state::PrimitiveValue,
+        zkevm_opcode_defs::{FatPointer, Opcode, CALL_IMPLICIT_CALLDATA_FAT_PTR_REGISTER, RET_IMPLICIT_RETURNDATA_PARAMS_REGISTER}
     },
 };
 use std::{collections::HashMap, fmt::Debug};
-use zk_evm::zkevm_opcode_defs::{FatPointer, Opcode, CALL_IMPLICIT_CALLDATA_FAT_PTR_REGISTER};
 use zksync_basic_types::{AccountTreeId, Address, H160, H256, U256};
 use zksync_state::{ReadStorage, StoragePtr, StorageView};
 use zksync_types::{
