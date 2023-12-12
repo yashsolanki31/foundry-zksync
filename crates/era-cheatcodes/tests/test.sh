@@ -45,8 +45,7 @@ function wait_for_build() {
 # See https://unix.stackexchange.com/questions/312631/bash-script-with-set-e-doesnt-stop-on-command
 function build_zkforge() {
   echo "Building ${1}..."
-  # cargo build --release --manifest-path="${1}/Cargo.toml"
-  cargo build --manifest-path="${1}/Cargo.toml"
+  cargo build --release --manifest-path="${1}/Cargo.toml"
   wait_for_build 30
 }
 
