@@ -7,7 +7,7 @@ TEST_REPO=${1:-$TEST_REPO}
 TEST_REPO_DIR=${2:-$TEST_REPO_DIR}
 SOLC_VERSION=${SOLC_VERSION:-"v0.8.20"}
 SOLC="solc-${SOLC_VERSION}"
-BINARY_PATH="../target/release/zkforge"
+BINARY_PATH="../../../target/debug/zkforge"
 
 if [ "${TEST_REPO}" == "foundry-zksync" ]; then
   BINARY_PATH="${TEST_REPO_DIR}/target/release/zkforge"
@@ -15,13 +15,16 @@ fi
 
 function cleanup() {
   echo "Cleaning up..."
-  rm -rf "./foundry-zksync"
   rm "./${SOLC}"
 }
 
 function download_solc() {
+  case "$(uname -s)" in
+  Darwin*) arch=macos ;;
+  *) arch=linux ;;
+  esac
   if [ ! -x "${SOLC}" ]; then
-    wget --quiet -O "${SOLC}" "https://github.com/ethereum/solidity/releases/download/${1}/solc-static-macos"
+    wget -O "${SOLC}" "https://github.com/ethereum/solidity/releases/download/${1}/solc-static-${arch}"
     chmod +x "${SOLC}"
   fi
 }
@@ -42,7 +45,8 @@ function wait_for_build() {
 # See https://unix.stackexchange.com/questions/312631/bash-script-with-set-e-doesnt-stop-on-command
 function build_zkforge() {
   echo "Building ${1}..."
-  cargo build --release --manifest-path="${1}/Cargo.toml"
+  # cargo build --release --manifest-path="${1}/Cargo.toml"
+  cargo build --manifest-path="${1}/Cargo.toml"
   wait_for_build 30
 }
 
@@ -64,11 +68,10 @@ command -v git &>/dev/null || {
   exit 1
 }
 
-
-build_zkforge "../"
+build_zkforge "../../.."
 
 echo "Running tests..."
-"${BINARY_PATH}" zkbuild --use "./${SOLC}"
+# "${BINARY_PATH}" zkbuild --use "./${SOLC}"
 RUST_LOG=debug "${BINARY_PATH}" test --use "./${SOLC}"
 
 # cleanup
