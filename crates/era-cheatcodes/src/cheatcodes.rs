@@ -9,7 +9,7 @@ use multivm::{
     interface::{dyn_tracers::vm_1_3_3::DynTracer, tracer::TracerExecutionStatus},
     vm_refunds_enhancement::{BootloaderState, HistoryMode, SimpleMemory, VmTracer, ZkSyncVmState},
     zk_evm_1_3_3::{
-        tracing::{AfterExecutionData, VmLocalStateData},
+        tracing::{BeforeExecutionData, AfterExecutionData, VmLocalStateData},
         vm_state::{CallStackEntry, PrimitiveValue},
         zkevm_opcode_defs::{
             FatPointer, Opcode, CALL_IMPLICIT_CALLDATA_FAT_PTR_REGISTER,
@@ -136,9 +136,65 @@ enum TestStatus {
     Finished,
 }
 
+fn opcode(opcode: Opcode) -> String {
+    match opcode {
+        Opcode::Invalid(_) => "Invalid".to_string(),
+        Opcode::Nop(_) => "Nop".to_string(),
+        Opcode::Add(_) => "Add".to_string(),
+        Opcode::Sub(_) => "Sub".to_string(),
+        Opcode::Mul(_) => "Mul".to_string(),
+        Opcode::Div(_) => "Div".to_string(),
+        Opcode::Jump(_) => "Jump".to_string(),
+        Opcode::Context(_) => "Context".to_string(),
+        Opcode::Shift(_) => "Shift".to_string(),
+        Opcode::Binop(_) => "Binop".to_string(),
+        Opcode::Ptr(_) => "Ptr".to_string(),
+        Opcode::NearCall(_) => "NearCall".to_string(),
+        Opcode::Log(_) => "Log".to_string(),
+        Opcode::FarCall(_) => "FarCall".to_string(),
+        Opcode::Ret(_) => "Ret".to_string(),
+        Opcode::UMA(_) => "UMA".to_string(),
+    }
+}
+
 impl<S: DatabaseExt + Send, H: HistoryMode> DynTracer<EraDb<S>, SimpleMemory<H>>
     for CheatcodeTracer
 {
+    fn before_execution(
+        &mut self,
+        state: VmLocalStateData<'_>,
+        data: BeforeExecutionData,
+        memory: &SimpleMemory<H>,
+        storage: StoragePtr<EraDb<S>>,
+    ) {
+        match data.opcode.variant.opcode {
+            Opcode::NearCall(_) | Opcode::FarCall(_) | Opcode::Ret(_) => {
+                // let current = state.vm_local_state.callstack.current;
+                // for _ in 0..=state.vm_local_state.callstack.depth() {
+                //     print!("  ");
+                // }
+                // println!(
+                //     "[B] {} {:?} -> {:?} [{}]",
+                //     opcode(data.opcode.variant.opcode),
+                //     current.msg_sender,
+                //     current.this_address,
+                //     state.vm_local_state.callstack.depth()
+                // );
+                // for _ in 0..=state.vm_local_state.callstack.depth() {
+                //     print!("\t");
+                // }
+                // println!("DATA: {} | num={}", hex::encode(calldata), self.test_number);
+
+                
+                // println!(
+                //     "{} depth={}",
+                //     opcode(data.opcode.variant.opcode),
+                //     state.vm_local_state.callstack.depth()
+                // );
+            }
+            _ => (),
+        }
+    }
     fn after_execution(
         &mut self,
         state: VmLocalStateData<'_>,
@@ -146,38 +202,123 @@ impl<S: DatabaseExt + Send, H: HistoryMode> DynTracer<EraDb<S>, SimpleMemory<H>>
         memory: &SimpleMemory<H>,
         storage: StoragePtr<EraDb<S>>,
     ) {
+        fn truncate(s: String, max_chars: usize) -> String {
+            match s.char_indices().nth(max_chars) {
+                None => s,
+                Some((idx, _)) => format!("{}...", &s[..idx]),
+            }
+        }
+
         let calldata = get_calldata(&state, memory);
+        match data.opcode.variant.opcode {
+            Opcode::NearCall(_) | Opcode::FarCall(_)  => {
+                let current = state.vm_local_state.callstack.current;
+                for _ in 0..=state.vm_local_state.callstack.depth() {
+                    print!("  ");
+                }
+                println!(
+                    "{} {:?} -> {:?} [{}] {}",
+                    opcode(data.opcode.variant.opcode),
+                    current.msg_sender,
+                    current.this_address,
+                    state.vm_local_state.callstack.depth(),
+                    truncate(hex::encode(calldata), 100),
+                );
+                // for _ in 0..=state.vm_local_state.callstack.depth() {
+                //     print!("\t");
+                // }
+                // println!("DATA: {} | num={}", hex::encode(calldata), self.test_number);
+
+                
+                // println!(
+                //     "{} depth={}",
+                //     opcode(data.opcode.variant.opcode),
+                //     state.vm_local_state.callstack.depth()
+                // );
+            },
+            Opcode::Ret(_) => {
+                let current = state.vm_local_state.callstack.current;
+                let d = state.vm_local_state.callstack.depth()+1;
+                for _ in 0..=d {
+                    print!("  ");
+                }
+                println!(
+                    "{} {:?} -> {:?} [{}] {}",
+                    opcode(data.opcode.variant.opcode),
+                    current.msg_sender,
+                    current.this_address,
+                    d,
+                    truncate(hex::encode(calldata), 100),
+                );
+            }
+            _ => (),
+        };
+        
+        
+        // match data.opcode.variant.opcode {
+        //     Opcode::NearCall(_) | Opcode::FarCall(_) | Opcode::Ret(_) | Opcode::Jump(_) |
+        // Opcode::Ptr(_) | Opcode::Context(_) | Opcode::UMA(_) | Opcode::Log(_)=> {
+        //         for _ in 0..=state.vm_local_state.callstack.depth() {
+        //             print!("\t");
+        //         }
+        //         println!(
+        //             "{} depth={}",
+        //             opcode(data.opcode.variant.opcode),
+        //             state.vm_local_state.callstack.depth()
+        //         );
+        //     }
+        //     _ => (),
+        // }
 
         // Keep track of calls to detect if test started and stuff
         match data.opcode.variant.opcode {
             Opcode::NearCall(_) => {
                 let current = state.vm_local_state.callstack.current;
-                // if current.code_address == TEST_ADDRESS {
-                println!(
-                    "// near_call {:?} depth {}",
-                    current,
-                    state.vm_local_state.callstack.depth()
-                );
-                println!("// calldata: {}", hex::encode(calldata));
                 self.test_number += 1;
                 self.test_callstacks.push(self.test_number);
-                println!("// test_number: {}", self.test_number);
+                // if current.code_address == TEST_ADDRESS {
+                
+                // for _ in 0..=state.vm_local_state.callstack.depth() {
+                //     print!("\t");
+                // }
+                // println!(
+                //     "NEAR {:?} -> {:?} ({:?}) depth={}",
+                //     current.msg_sender,
+                //     current.this_address,
+                //     current.code_address,
+                //     state.vm_local_state.callstack.depth()
+                // );
+                // for _ in 0..=state.vm_local_state.callstack.depth() {
+                //     print!("\t");
+                // }
+                // println!("DATA: {} | num={}", hex::encode(calldata), self.test_number);
+
                 self.callstacks.push(current);
                 // }
             }
             Opcode::FarCall(_) => {
                 let current = state.vm_local_state.callstack.current;
-                // if current.code_address == TEST_ADDRESS {
-                println!(
-                    "// far_call {:?} depth {}",
-                    current,
-                    state.vm_local_state.callstack.depth()
-                );
-                println!("// calldata: {}", hex::encode(calldata));
                 self.test_number += 1;
                 self.test_callstacks.push(self.test_number);
                 self.callstacks.push(current);
-                println!("// test_number: {}", self.test_number);
+
+                // if current.code_address == TEST_ADDRESS {
+                
+                // for _ in 0..=state.vm_local_state.callstack.depth() {
+                //     print!("\t");
+                // }
+                // println!(
+                //     "FAR  {:?} -> {:?} ({:?}) depth={}",
+                //     current.msg_sender,
+                //     current.this_address,
+                //     current.code_address,
+                //     state.vm_local_state.callstack.depth()
+                // );
+                // for _ in 0..=state.vm_local_state.callstack.depth() {
+                //     print!("\t");
+                // }
+                // println!("DATA: {} | num={}", hex::encode(calldata), self.test_number);
+                
                 if self.test_status == TestStatus::NotStarted &&
                     current.code_address == TEST_ADDRESS
                 {
@@ -190,18 +331,31 @@ impl<S: DatabaseExt + Send, H: HistoryMode> DynTracer<EraDb<S>, SimpleMemory<H>>
             Opcode::Ret(_) => {
                 let current = state.vm_local_state.callstack.current;
                 // if current.code_address == TEST_ADDRESS {
-                println!(
-                    "// ret_call {:?} depth {}",
-                    current,
-                    state.vm_local_state.callstack.depth()
-                );
-                println!("// calldata: {}", hex::encode(calldata));
-                self.callstacks.pop();
-                println!("// popped test_number: {:?}", self.test_callstacks.pop());
-                println!("// test_number_length: {}", self.test_callstacks.len());
-                if self.test_callstacks.len() < 10 {
-                    println!("// test_callstacks: {:?}", self.test_callstacks);
-                }
+                let actual_depth = state.vm_local_state.callstack.depth(); // + 1;
+                
+                // for _ in 0..=actual_depth {
+                //     print!("\t");
+                // }
+                // println!(
+                //     "RETR {:?} -> {:?} ({:?}) depth={}",
+                //     current.msg_sender, current.this_address, current.code_address, actual_depth
+                // );
+                // for _ in 0..=actual_depth {
+                //     print!("\t");
+                // }
+                // self.callstacks.pop();
+                // let n = self.test_callstacks.pop();
+                // println!(
+                //     "DATA: {} | num={:?}, len={}, remain={:?}",
+                //     hex::encode(calldata),
+                //     n,
+                //     self.test_callstacks.len(),
+                //     if self.test_callstacks.len() < 10 {
+                //         self.test_callstacks.clone()
+                //     } else {
+                //         vec![]
+                //     }
+                // );
 
                 // Check ret opcode has 2 lower depth than
                 if let Some(callstack_depth) = self.callstack_depth {
@@ -290,6 +444,14 @@ impl<S: DatabaseExt + Send, H: HistoryMode> VmTracer<EraDb<S>, H> for CheatcodeT
         state: &mut ZkSyncVmState<EraDb<S>, H>,
         _bootloader_state: &mut BootloaderState,
     ) -> TracerExecutionStatus {
+        
+        // println!(
+        //     "FIN {:?} -> {:?} [{}]",
+        //     state.local_state.callstack.current.msg_sender,
+        //     state.local_state.callstack.current.this_address,
+        //     state.local_state.callstack.depth(),
+        // );
+
         let emitter = state.local_state.callstack.current.this_address;
         if self.recording_logs {
             let logs = transform_to_logs(

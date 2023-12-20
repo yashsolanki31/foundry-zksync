@@ -167,7 +167,7 @@ where
     };
 
     let config = InMemoryNodeConfig {
-        show_calls: ShowCalls::None,
+        show_calls: ShowCalls::All,
         show_storage_logs: ShowStorageLogs::None,
         show_vm_details: ShowVMDetails::None,
         show_gas_details: ShowGasDetails::None,
