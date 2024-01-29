@@ -5,41 +5,22 @@ import {Test, console2 as console} from "../../lib/forge-std/src/Test.sol";
 import {Constants} from "./Constants.sol";
 
 contract Mock {
-    uint256 state = 0;
+    // function numberA() public pure returns (uint256) {
+    //     uint256 amount = 10 - 8;
+    //     console.log("foo");
+    //     return amount;
+    // }
 
     function numberA() public pure returns (uint256) {
-        return 1;
+        return 8;
     }
-
-    function numberB() public pure returns (uint256) {
-        return 2;
-    }
-
-    function add(uint256 a, uint256 b) public pure returns (uint256) {
-        return a + b;
-    }
-
-    function pay(uint256 a) public payable returns (uint256) {
-        return a;
-    }
-
-    function noReturnValue() public {
-        // Does nothing of value, but also ensures that Solidity will 100%
-        // generate an `extcodesize` check.
-        state += 1;
-    }
-}
-
-contract NestedMock {
-    Mock private inner;
-
-    constructor(Mock _inner) {
-        inner = _inner;
-    }
-
-    function sum() public view returns (uint256) {
-        return inner.numberA() + inner.numberB();
-    }
+    
+    // function numberA() public pure {
+    // }
+    // function numberA() public pure {
+    //     uint256 amount = 10 - 8;
+    //     console.log(amount);
+    // }
 }
 
 contract MockCallTest is Test {
@@ -47,17 +28,19 @@ contract MockCallTest is Test {
         Mock target = new Mock();
 
         // pre-mock
-        assertEq(target.numberA(), 1);
-        assertEq(target.numberB(), 2);
+        // assertEq(target.numberA(), 1);
+        // assertEq(target.numberB(), 2);
 
+        console.log(115792089237316195423570985008687907853269984665640564039457584007913129639935);
         vm.mockCall(
             address(target),
-            abi.encodeWithSelector(target.numberB.selector),
-            abi.encode(30)
+            abi.encodeWithSelector(target.numberA.selector),
+            abi.encode(16)
         );
 
         // post-mock
-        console.log("numberB", target.numberB());
-        require(target.numberB() == 30, "numberB failed mock");
+        uint256 number = target.numberA();
+        console.log(number);
+        require(number == 16, "numberB failed mock");
     }
 }

@@ -15,15 +15,17 @@ use foundry_evm_core::{
     opts::EvmOpts,
 };
 use itertools::Itertools;
+use zkevm_opcode_defs::decoding::AllowedPcOrImm;
 use multivm::{
     interface::{dyn_tracers::vm_1_4_0::DynTracer, tracer::TracerExecutionStatus, VmRevertReason},
     vm_latest::{
         BootloaderState, HistoryMode, L1BatchEnv, SimpleMemory, SystemEnv, VmTracer, ZkSyncVmState,
     },
-    zk_evm_1_3_3::zkevm_opcode_defs::CALL_SYSTEM_ABI_REGISTERS,
+    zk_evm_1_3_1::zkevm_opcode_defs::{OPCODES_TABLE, OPCODES_TABLE_WIDTH},
+    zk_evm_1_3_3::{abstractions::Memory, zkevm_opcode_defs::CALL_SYSTEM_ABI_REGISTERS},
     zk_evm_1_4_0::{
         tracing::{AfterExecutionData, VmLocalStateData},
-        vm_state::{PrimitiveValue, VmLocalState},
+        vm_state::{CallStackEntry, PrimitiveValue, VmLocalState},
         zkevm_opcode_defs::{
             self,
             decoding::{EncodingModeProduction, VmEncodingMode},
@@ -133,7 +135,17 @@ pub struct CheatcodeTracer {
     saved_snapshots: HashMap<U256, SavedSnapshot>,
     broadcastable_transactions: Vec<BroadcastableTransaction>,
     pub mock_calls: Vec<MockCall>,
-    last_pc: Option<PcOrImm>,
+    active_farcall_stack: Option<CallStackEntry>,
+    current_opcode: CurrentOpcode,
+    current_opcode_track: bool,
+}
+
+#[derive(Debug, Default, Clone)]
+struct CurrentOpcode {
+    opcode: Option<multivm::zk_evm_1_4_0::opcodes::DecodedOpcode>,
+    pc: u16,
+    base_page: u32,
+    code_page: u32,
 }
 
 #[derive(Debug, Clone)]
@@ -184,21 +196,63 @@ enum ExpectedEmitState {
 
 #[derive(Debug, Clone)]
 enum FinishCycleOneTimeActions {
-    StorageWrite { key: StorageKey, read_value: H256, write_value: H256 },
-    StoreFactoryDep { hash: U256, bytecode: Vec<U256> },
-    ForceRevert { error: Vec<u8>, exception_handler: PcOrImm },
-    ForceReturn { data: Vec<u8>, continue_pc: PcOrImm },
-    CreateSelectFork { url_or_alias: String, block_number: Option<u64> },
-    CreateFork { url_or_alias: String, block_number: Option<u64> },
-    RollFork { block_number: Uint<256, 4>, fork_id: Option<Uint<256, 4>> },
-    SelectFork { fork_id: U256 },
-    RevertToSnapshot { snapshot_id: U256 },
+    StorageWrite {
+        key: StorageKey,
+        read_value: H256,
+        write_value: H256,
+    },
+    StoreFactoryDep {
+        hash: U256,
+        bytecode: Vec<U256>,
+    },
+    ForceRevert {
+        error: Vec<u8>,
+        exception_handler: PcOrImm,
+    },
+    ForceReturn {
+        data: Vec<u8>,
+        continue_pc: PcOrImm,
+    },
+    SetImmediateReturn {
+        data: Vec<u8>,
+        continue_pc: PcOrImm,
+        base_memory_page: u32,
+        code_page: u32,
+    },
+    CreateSelectFork {
+        url_or_alias: String,
+        block_number: Option<u64>,
+    },
+    CreateFork {
+        url_or_alias: String,
+        block_number: Option<u64>,
+    },
+    RollFork {
+        block_number: Uint<256, 4>,
+        fork_id: Option<Uint<256, 4>>,
+    },
+    SelectFork {
+        fork_id: U256,
+    },
+    RevertToSnapshot {
+        snapshot_id: U256,
+    },
     Snapshot,
-    SetOrigin { origin: H160 },
-    MakePersistentAccount { account: H160 },
-    MakePersistentAccounts { accounts: Vec<H160> },
-    RevokePersistentAccount { account: H160 },
-    RevokePersistentAccounts { accounts: Vec<H160> },
+    SetOrigin {
+        origin: H160,
+    },
+    MakePersistentAccount {
+        account: H160,
+    },
+    MakePersistentAccounts {
+        accounts: Vec<H160>,
+    },
+    RevokePersistentAccount {
+        account: H160,
+    },
+    RevokePersistentAccounts {
+        accounts: Vec<H160>,
+    },
 }
 
 #[derive(Debug, Clone)]
@@ -221,9 +275,18 @@ enum ActionOnReturn {
 }
 
 #[derive(Debug, Default, Clone)]
+struct ImmediateReturnOpts {
+    return_data: Vec<u8>,
+    continue_pc: PcOrImm,
+    base_memory_page: u32,
+    code_page: u32,
+}
+
+#[derive(Debug, Default, Clone)]
 struct FinishCyclePermanentActions {
     start_prank: Option<StartPrankOpts>,
     broadcast: Option<BroadcastOpts>,
+    immediate_return: Option<ImmediateReturnOpts>,
 }
 
 #[derive(Debug, Clone)]
@@ -280,9 +343,53 @@ impl<S: DatabaseExt + Send, H: HistoryMode> DynTracer<EraDb<S>, SimpleMemory<H>>
         &mut self,
         state: VmLocalStateData<'_>,
         data: multivm::zk_evm_1_4_0::tracing::BeforeExecutionData,
-        _memory: &SimpleMemory<H>,
+        memory: &SimpleMemory<H>,
         _storage: StoragePtr<EraDb<S>>,
     ) {
+        self.current_opcode = CurrentOpcode {
+            // name: format!("{:?}", data.opcode.variant.opcode),
+            opcode: Some(data.opcode.clone()),
+            pc: state.vm_local_state.callstack.current.pc,
+            base_page: state.vm_local_state.callstack.current.base_memory_page.0,
+            code_page: state.vm_local_state.callstack.current.code_page.0,
+        };
+
+        if let Opcode::FarCall(_call) = data.opcode.variant.opcode {
+            self.active_farcall_stack.replace(state.vm_local_state.callstack.current);
+            // self.last_pc = current.pc;
+            // self.last_base_memory_page = current.base_memory_page.0;
+            // self.last_code_page = current.code_page.0;
+        }
+
+        // if let Opcode::Ret(_) = data.opcode.variant.opcode {
+        //     let ptr =
+        //         state.vm_local_state.registers[RET_IMPLICIT_RETURNDATA_PARAMS_REGISTER as usize];
+        //     println!("saving return ptr {:?}", ptr.value);
+        //     let fat_data_pointer = FatPointer::from_u256(ptr.value);
+        //     self.last_return_ptr = Some(fat_data_pointer);
+        // }
+
+        // let code_page = state.vm_local_state.callstack.current.code_page;
+        // let pc = state.vm_local_state.callstack.current.pc;
+        // let (super_pc, _) = (pc >> 2, pc & 0b11);
+        // memory.specialized_code_query(
+        //     0,
+        //     multivm::zk_evm_1_3_3::aux_structures::MemoryQuery {
+        //         timestamp: Timestamp::empty(),
+        //         location: multivm::zk_evm_1_3_3::aux_structures::MemoryLocation {
+        //             memory_type: multivm::zk_evm_1_3_3::abstractions::MemoryType::Code,
+        //             page: code_page,
+        //             index: multivm::zk_evm_1_3_3::aux_structures::MemoryIndex(super_pc as u32),
+        //         },
+        //         value: U256::zero(),
+        //         rw_flag: false,
+        //         value_is_pointer: false,
+        //     },
+        // );
+        // println!(
+        //     "{:?} {:?}",
+        //     data.opcode.variant.opcode, state.vm_local_state.callstack.current.pc
+        // );
         //store the current exception handler in expect revert
         // to be used to force a revert
         if let Some(ActionOnReturn::ExpectRevert {
@@ -378,6 +485,21 @@ impl<S: DatabaseExt + Send, H: HistoryMode> DynTracer<EraDb<S>, SimpleMemory<H>>
             self.reset_test_status();
         }
 
+        // if let Opcode::Ret(RetOpcode::Ok) = data.opcode.variant.opcode {
+        //     let ptr =
+        //         state.vm_local_state.registers[RET_IMPLICIT_RETURNDATA_PARAMS_REGISTER as usize];
+        //     if ptr.is_pointer {
+        //         let fat_data_pointer = FatPointer::from_u256(ptr.value);
+        //         let ret_data = memory.read_unaligned_bytes(
+        //             fat_data_pointer.memory_page as usize,
+        //             fat_data_pointer.start as usize,
+        //             fat_data_pointer.length as usize,
+        //         );
+        //         println!("saving return ptr {:?}", fat_data_pointer);
+        //         self.last_return_ptr = Some(fat_data_pointer);
+        //         println!("RETDATA {:?} = {:?}", fat_data_pointer, ret_data);
+        //     }
+        // }
         // Checks returns from caontracts for expectRevert cheatcode
         self.handle_return(&state, &data, memory);
 
@@ -408,21 +530,20 @@ impl<S: DatabaseExt + Send, H: HistoryMode> DynTracer<EraDb<S>, SimpleMemory<H>>
         }
 
         if let Opcode::FarCall(_call) = data.opcode.variant.opcode {
-            println!("mock call found");
             let current = state.vm_local_state.callstack.current;
             let calldata = get_calldata(&state, memory);
             for mock_call in &mut self.mock_calls {
                 if mock_call.filter.address == current.code_address &&
                     mock_call.filter.calldata == calldata
                 {
-                    self.one_time_actions.push(FinishCycleOneTimeActions::ForceReturn {
-                        data: mock_call.filter.return_data.clone(),
-                        continue_pc: self.last_pc.unwrap(),
-                    })
-                    // println!("return data: {:?}", self.return_data);
-                    // println!("depth {}", state.vm_local_state.callstack.depth());
-                    // println!("mock call found");
-                    // mock_call.mock_next = Some(mock_call.filter.return_data.clone());
+                    println!("mock call matched returning preset data");
+                    let current = self.active_farcall_stack.unwrap();
+                    self.permanent_actions.immediate_return.replace(ImmediateReturnOpts {
+                        return_data: mock_call.filter.return_data.clone(),
+                        continue_pc: current.pc + 1,
+                        base_memory_page: current.base_memory_page.0,
+                        code_page: current.code_page.0,
+                    });
                 }
             }
         }
@@ -568,6 +689,16 @@ impl<S: DatabaseExt + Send, H: HistoryMode> DynTracer<EraDb<S>, SimpleMemory<H>>
     }
 }
 
+fn integer_representaiton_from_u256(value: U256, index: u32) -> u64 {
+    match index {
+        0 => value.0[3],
+        1 => value.0[2],
+        2 => value.0[1],
+        3 => value.0[0],
+        _ => unreachable!(),
+    }
+}
+
 impl<S: DatabaseExt + Send, H: HistoryMode> VmTracer<EraDb<S>, H> for CheatcodeTracer {
     fn initialize_tracer(
         &mut self,
@@ -586,6 +717,70 @@ impl<S: DatabaseExt + Send, H: HistoryMode> VmTracer<EraDb<S>, H> for CheatcodeT
         bootloader_state: &mut BootloaderState,
         storage: StoragePtr<EraDb<S>>,
     ) -> TracerExecutionStatus {
+        if self.current_opcode_track {
+            let code_page = state.local_state.callstack.current.code_page;
+            let pc = state.local_state.callstack.current.pc;
+            let (super_pc, sub_pc) = (pc >> 2, pc & 0b11);
+            let query = state.memory.specialized_code_query(
+                0,
+                multivm::zk_evm_1_3_3::aux_structures::MemoryQuery {
+                    timestamp: Timestamp::empty(),
+                    location: multivm::zk_evm_1_3_3::aux_structures::MemoryLocation {
+                        memory_type: multivm::zk_evm_1_3_3::abstractions::MemoryType::Code,
+                        page: code_page,
+                        index: multivm::zk_evm_1_3_3::aux_structures::MemoryIndex(super_pc as u32),
+                    },
+                    value: U256::zero(),
+                    rw_flag: false,
+                    value_is_pointer: false,
+                },
+            );
+            let u256_word = query.value;
+            let raw_opcode_u64 = integer_representaiton_from_u256(u256_word, sub_pc as u32);
+
+            // const VARIANT_MASK: u64 = (1u64 << zkevm_opcode_defs::OPCODES_TABLE_WIDTH) - 1;
+            // const CONDITION_MASK: u64 = ((1u64 << zkevm_opcode_defs::CONDITIONAL_BITS_WIDTH) - 1)
+            // << zkevm_opcode_defs::CONDITIONAL_BITS_SHIFT;
+
+            // let variant_bits = raw_opcode_u64 & VARIANT_MASK;
+            // let opcode_variant = zkevm_opcode_defs::OPCODES_TABLE[variant_bits as usize];
+            // let condition_bits = (raw_opcode_u64 & CONDITION_MASK) >>
+            // zkevm_opcode_defs::CONDITIONAL_BITS_SHIFT; let condition =
+            // zkevm_opcode_defs::Condition::materialize_variant(condition_bits as usize);
+
+            let (decoded_opcode, _opcode_raw_variant_idx) =
+                EncodingModeProduction::parse_preliminary_variant_and_absolute_number(
+                    raw_opcode_u64,
+                );
+            let cs = &state.local_state.callstack.current;
+            if let Some(current_opcode) = self.current_opcode.opcode {
+                // println!(
+                //     "> pc={:<4?} bp={:<4?} cp={:<4?} | next pc={:<4?} bp={:<4?} cp={:<4?} | {:?}
+                // src0={:?}({:?}) src1={:?} dst0={:?}({:?}) dst1={:?} imm0={:?} imm1={:?} cond={:?}
+                // flags={:?} | {} = {:?} | decoded={:?}",     self.current_opcode.
+                // pc,     self.current_opcode.base_page,
+                //     self.current_opcode.code_page,
+                //     cs.pc,
+                //     cs.base_memory_page.0,
+                //     cs.code_page.0,
+                //     current_opcode.variant.opcode,
+                //     current_opcode.src0_reg_idx,
+                //     current_opcode.variant.src0_operand_type,
+                //     current_opcode.src1_reg_idx,
+                //     current_opcode.dst0_reg_idx,
+                //     current_opcode.variant.dst0_operand_type,
+                //     current_opcode.dst1_reg_idx,
+                //     current_opcode.imm_0,
+                //     current_opcode.imm_1,
+                //     current_opcode.condition,
+                //     current_opcode.variant.flags,
+                //     u256_word,
+                //     raw_opcode_u64,
+                //     decoded_opcode,
+                // );
+            }
+        }
+
         if self.recording_logs {
             let (events, _) = state.event_sink.get_events_and_l2_l1_logs_after_timestamp(
                 zksync_types::Timestamp(self.recording_timestamp),
@@ -909,6 +1104,73 @@ impl<S: DatabaseExt + Send, H: HistoryMode> VmTracer<EraDb<S>, H> for CheatcodeT
                     storage.modified_storage_keys = modified_storage;
                     self.return_data = Some(snapshot_id.to_return_data());
                 }
+                FinishCycleOneTimeActions::SetImmediateReturn {
+                    data,
+                    continue_pc: pc,
+                    base_memory_page,
+                    code_page,
+                } => {
+                    // [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                    // 0, 0, 0, 0, 0, 0, 8] let data = vec![0, 0, 0, 0, 0, 0, 0,
+                    // 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                    // 16u8];
+                    let data_chunks = data.chunks(32).into_iter();
+                    let return_fat_ptr = FatPointer {
+                        offset: 0,
+                        memory_page: base_memory_page + 2,
+                        start: 0,
+                        length: (data_chunks.len() as u32) * 32,
+                    };
+                    // let mut last_return_ptr = self.last_return_ptr.take().unwrap();
+                    // last_return_ptr.start = 0;
+                    // last_return_ptr.memory_page = base_memory_page + 2;
+                    let start_slot = (return_fat_ptr.start / 32) as usize;
+                    // let start_slot = (128 / 32) as usize;
+
+                    let data = data_chunks
+                        .enumerate()
+                        .map(|(index, value)| (start_slot + index, U256::from_big_endian(value)))
+                        .collect_vec();
+                    // let data = vec![(slot as usize, U256::max_value())];
+                    println!("set return on {:?} to {:?}", return_fat_ptr, data);
+
+                    // self.return_data = Some(data);
+                    // let ptr = state.local_state.registers
+                    //     [RET_IMPLICIT_RETURNDATA_PARAMS_REGISTER as usize];
+                    // let mut fat_data_pointer = FatPointer::from_u256(ptr.value);
+                    // return_fat_ptr.length = (data.len() as u32) * 32;
+
+                    let timestamp = Timestamp(state.local_state.timestamp);
+
+                    state.local_state.registers[RET_IMPLICIT_RETURNDATA_PARAMS_REGISTER as usize] =
+                        PrimitiveValue { value: return_fat_ptr.to_u256(), is_pointer: true };
+                    state.memory.populate_page(
+                        return_fat_ptr.memory_page as usize,
+                        data,
+                        timestamp,
+                    );
+
+                    let ret_data = state.memory.read_unaligned_bytes(
+                        return_fat_ptr.memory_page as usize,
+                        return_fat_ptr.start as usize,
+                        return_fat_ptr.length as usize,
+                    );
+
+                    println!("checking data {:?}", ret_data);
+                    // Self::set_return(
+                    //     last_return_ptr,
+                    //     data,
+                    //     &mut state.local_state,
+                    //     &mut state.memory,
+                    // );
+
+                    //change current stack pc to label
+                    state.local_state.callstack.get_current_stack_mut().pc = pc;
+                    state.local_state.callstack.get_current_stack_mut().base_memory_page =
+                        multivm::zk_evm_1_3_3::aux_structures::MemoryPage(base_memory_page);
+                    state.local_state.callstack.get_current_stack_mut().code_page =
+                        multivm::zk_evm_1_3_3::aux_structures::MemoryPage(code_page);
+                }
                 FinishCycleOneTimeActions::ForceReturn { data, continue_pc: pc } => {
                     println!("HERE");
                     tracing::debug!("!!!! FORCING RETURN");
@@ -986,6 +1248,23 @@ impl<S: DatabaseExt + Send, H: HistoryMode> VmTracer<EraDb<S>, H> for CheatcodeT
                 state.local_state.callstack.current.msg_sender = start_prank_call.sender;
             }
         }
+
+        if let Some(immediate_return) = self.permanent_actions.immediate_return.take() {
+            // setting return data for next finish cycle.
+            println!(
+                "!!!! FORCING IMMEDIATE RETURN continue={} mem={}, code={}",
+                immediate_return.continue_pc,
+                immediate_return.base_memory_page,
+                immediate_return.code_page
+            );
+            self.one_time_actions.push(FinishCycleOneTimeActions::SetImmediateReturn {
+                data: immediate_return.return_data.clone(),
+                continue_pc: immediate_return.continue_pc,
+                base_memory_page: immediate_return.base_memory_page,
+                code_page: immediate_return.code_page,
+            });
+        }
+
         TracerExecutionStatus::Continue
     }
 }
@@ -995,6 +1274,10 @@ impl CheatcodeTracer {
         cheatcodes_config: Arc<CheatsConfig>,
         storage_modifications: StorageModifications,
     ) -> Self {
+        // for (idx, k) in OPCODES_TABLE.iter().enumerate() {
+        //     println!("{idx} {k:?}");
+        // }
+
         Self { config: cheatcodes_config, storage_modifications, ..Default::default() }
     }
 
@@ -1022,6 +1305,7 @@ impl CheatcodeTracer {
                     self.test_status = FoundryTestState::Running {
                         call_depth: state.vm_local_state.callstack.depth(),
                     };
+                    self.current_opcode_track = true;
                     tracing::info!("Test started depth {}", state.vm_local_state.callstack.depth());
                 }
             }
@@ -1031,6 +1315,7 @@ impl CheatcodeTracer {
                     // popped (so reduced by 1) and must be accounted for.
                     if call_depth == state.vm_local_state.callstack.depth() + 1 {
                         self.test_status = FoundryTestState::Finished;
+                        self.current_opcode_track = false;
                         tracing::info!("Test finished {}", state.vm_local_state.callstack.depth());
                         // panic!("Test finished")
                     }
