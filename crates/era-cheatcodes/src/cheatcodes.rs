@@ -1,6 +1,7 @@
 use crate::{
     events::LogEntry,
     farcall::{FarCallHandler, MockCall, MockedCalls},
+    multivm::{CachedForkUrlType, EvmExecutor, ForkUrlType},
     utils::{ToH160, ToH256, ToU256},
 };
 use alloy_primitives::{Address, Bytes, FixedBytes, I256 as rI256};
@@ -147,7 +148,7 @@ enum FoundryTestState {
 }
 
 #[derive(Debug, Default, Clone)]
-pub struct CheatcodeTracer {
+pub struct CheatcodeTracer<E: EvmExecutor> {
     storage_modifications: StorageModifications,
     one_time_actions: Vec<FinishCycleOneTimeActions>,
     next_return_action: Option<NextReturnAction>,
@@ -169,6 +170,8 @@ pub struct CheatcodeTracer {
     transact_logs: Vec<LogEntry>,
     mocked_calls: MockedCalls,
     farcall_handler: FarCallHandler,
+    fork_type_url: CachedForkUrlType,
+    evm: E,
 }
 
 #[derive(Debug, Clone)]
@@ -301,8 +304,8 @@ struct BroadcastOpts {
     depth: usize,
 }
 
-impl<S: DatabaseExt + Send, H: HistoryMode> DynTracer<EraDb<S>, SimpleMemory<H>>
-    for CheatcodeTracer
+impl<E: EvmExecutor, S: DatabaseExt + revm::DatabaseCommit + Send, H: HistoryMode> DynTracer<EraDb<S>, SimpleMemory<H>>
+    for CheatcodeTracer<E>
 {
     fn before_execution(
         &mut self,
@@ -625,6 +628,71 @@ impl<S: DatabaseExt + Send, H: HistoryMode> DynTracer<EraDb<S>, SimpleMemory<H>>
                         self.set_nonce(new_origin, (Some(nonce + 1 + nonce_offset), None), handle);
                     }
                 }
+
+                if true {
+                    // if let Some(executor) = &mut self.is_switched_to_evm {
+                    if !BROADCAST_IGNORED_CONTRACTS.contains(&current.code_address) {
+                        let from = current.msg_sender;
+                        let from = revm::primitives::Address::from(from.to_fixed_bytes());
+                        let (value, to) = if current.code_address ==
+                        zksync_types::MSG_VALUE_SIMULATOR_ADDRESS
+                        {
+                            //when some eth is sent to an address in zkevm the call is replaced
+                            // with a call to MsgValueSimulator, which does a mimic_call later
+                            // to the original destination
+                            // The value is stored in the 1st system abi register, and the
+                            // original address is stored in the 2nd register
+                            // see: https://github.com/matter-labs/era-test-node/blob/6ee7d29e876b75506f58355218e1ea755a315d17/etc/system-contracts/contracts/MsgValueSimulator.sol#L26-L27
+                            let msg_value_simulator_value_reg_idx = CALL_SYSTEM_ABI_REGISTERS.start;
+                            let msg_value_simulator_address_reg_idx =
+                                msg_value_simulator_value_reg_idx + 1;
+                            let value = state.vm_local_state.registers
+                                [msg_value_simulator_value_reg_idx as usize];
+
+                            let address = state.vm_local_state.registers
+                                [msg_value_simulator_address_reg_idx as usize];
+
+                            let mut bytes = [0u8; 32];
+                            address.value.to_big_endian(&mut bytes);
+                            let address = H256::from(bytes);
+
+                            (Some(value.value), address.into())
+                        } else {
+                            (None, current.code_address)
+                        };
+                        let value = rU256::from_limbs(value.unwrap_or_default().0);
+                        let to = revm::primitives::Address::from(to.to_fixed_bytes());
+
+                        let calldata = get_calldata(&state, memory);
+                        let era_db = &storage.borrow_mut().storage_handle;
+                        let mut db = era_db.db.lock().unwrap();
+                        let era_env = self.env.get().unwrap();
+                        let mut env = into_revm_env(era_env);
+                        env.tx = revm::primitives::TxEnv {
+                            caller: from,
+                            transact_to:  revm::primitives::TransactTo::Call(to.into()),
+                            data: calldata.into(),
+                            value,
+                            // As above, we set the gas price to 0.
+                            gas_price: rU256::from(0),
+                            gas_priority_fee: None,
+                            gas_limit: era_env.system_env.gas_limit as u64,
+                            ..env.tx
+                        };
+                        let result = db.call_evm(env).expect("failed running evm call");
+                        let output = result.result.output().unwrap().clone();
+
+                        // update state in current EVM after performing any storage translations
+                        if !result.state.is_empty() {
+                            db.commit(result.state);
+                        }
+
+
+                        self.farcall_handler
+                            .set_immediate_return(output.into());
+                    }
+                }
+
                 return
             }
 
@@ -648,7 +716,9 @@ impl<S: DatabaseExt + Send, H: HistoryMode> DynTracer<EraDb<S>, SimpleMemory<H>>
     }
 }
 
-impl<S: DatabaseExt + Send, H: HistoryMode> VmTracer<EraDb<S>, H> for CheatcodeTracer {
+impl<E: EvmExecutor, S: DatabaseExt + revm::DatabaseCommit + Send, H: HistoryMode> VmTracer<EraDb<S>, H>
+    for CheatcodeTracer<E>
+{
     fn initialize_tracer(
         &mut self,
         _state: &mut ZkSyncVmState<EraDb<S>, H>,
@@ -836,18 +906,29 @@ impl<S: DatabaseExt + Send, H: HistoryMode> VmTracer<EraDb<S>, H> for CheatcodeT
                     self.return_data = Some(fork_id.unwrap().to_return_data());
                 }
                 FinishCycleOneTimeActions::CreateFork { url_or_alias, block_number } => {
-                    let era_db = &storage.borrow_mut().storage_handle;
-                    let mut db = era_db.db.lock().unwrap();
+                    // TODO MULTIVM spin up the new fork in EVM
                     let era_env = self.env.get().unwrap();
-                    let fork_id = db
-                        .create_fork(create_fork_request(
-                            era_env,
-                            self.config.clone(),
-                            block_number,
-                            &url_or_alias,
-                        ))
-                        .unwrap();
-                    self.return_data = Some(fork_id.to_return_data());
+                    let fork = create_fork_request(
+                        era_env,
+                        self.config.clone(),
+                        block_number,
+                        &url_or_alias,
+                    );
+
+                    match self.fork_type_url.get(&fork) {
+                        ForkUrlType::Evm => {
+                            // create a fork for EVM in EVM scope
+                            let fork_id = self.evm.create_fork(fork).unwrap();
+                            self.return_data = Some(fork_id.to_return_data());
+                        }
+                        ForkUrlType::Zk => {
+                            let era_db = &storage.borrow_mut().storage_handle;
+                            let mut db = era_db.db.lock().unwrap();
+
+                            let fork_id = db.create_fork(fork).unwrap();
+                            self.return_data = Some(fork_id.to_return_data());
+                        }
+                    };
                 }
                 FinishCycleOneTimeActions::RollFork { block_number, fork_id } => {
                     let modified_storage =
@@ -890,6 +971,8 @@ impl<S: DatabaseExt + Send, H: HistoryMode> VmTracer<EraDb<S>, H> for CheatcodeT
                     storage.modified_storage_keys = modified_storage;
                 }
                 FinishCycleOneTimeActions::SelectFork { fork_id } => {
+                    // TODO MULTIVM switch to EVM
+
                     let mut storage = storage.borrow_mut();
                     let modified_storage =
                         self.get_modified_storage(storage.modified_storage_keys());
@@ -1119,17 +1202,37 @@ impl<S: DatabaseExt + Send, H: HistoryMode> VmTracer<EraDb<S>, H> for CheatcodeT
     }
 }
 
-impl CheatcodeTracer {
+impl<E: EvmExecutor> CheatcodeTracer<E> {
     pub fn new(
         cheatcodes_config: Arc<CheatsConfig>,
         storage_modifications: StorageModifications,
         broadcastable_transactions: Arc<RwLock<BroadcastableTransactions>>,
+        evm: E,
     ) -> Self {
         Self {
+            evm,
             config: cheatcodes_config,
             storage_modifications,
             broadcastable_transactions,
-            ..Default::default()
+            one_time_actions: Default::default(),
+            next_return_action: Default::default(),
+            permanent_actions: Default::default(),
+            return_data: Default::default(),
+            return_ptr: Default::default(),
+            near_calls: Default::default(),
+            serialized_objects: Default::default(),
+            env: Default::default(),
+            recorded_logs: Default::default(),
+            recording_logs: Default::default(),
+            recording_timestamp: Default::default(),
+            expected_calls: Default::default(),
+            test_status: Default::default(),
+            emit_config: Default::default(),
+            saved_snapshots: Default::default(),
+            transact_logs: Default::default(),
+            mocked_calls: Default::default(),
+            farcall_handler: Default::default(),
+            fork_type_url: Default::default(),
         }
     }
 

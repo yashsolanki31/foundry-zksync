@@ -3267,6 +3267,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5443807d6dff69373d433ab9ef5378ad8df50ca6298caf15de6e52e24aaf54d5"
 
 [[package]]
+name = "era-multivm"
+version = "0.2.0"
+dependencies = [
+ "foundry-cheatcodes",
+ "foundry-common",
+ "foundry-evm-core",
+]
+
+[[package]]
 name = "era_cheatcodes"
 version = "0.2.0"
 dependencies = [
@@ -3285,6 +3294,7 @@ dependencies = [
  "revm",
  "serde",
  "serde_json",
+ "tokio",
  "tracing",
  "zksync_basic_types",
  "zksync_state",
@@ -4385,6 +4395,7 @@ dependencies = [
  "alloy-primitives",
  "alloy-sol-types",
  "const-hex",
+ "era-multivm",
  "era_cheatcodes",
  "ethers-core",
  "ethers-signers",

@@ -12,6 +12,7 @@ use crate::inspectors::{
 use alloy_dyn_abi::{DynSolValue, FunctionExt, JsonAbiExt};
 use alloy_json_abi::{Function, JsonAbi as Abi};
 use alloy_primitives::{Address, Bytes, FixedBytes, B256, U256};
+use era_cheatcodes::multivm::{EvmExecutor, EvmRawCallResult};
 use ethers_core::types::{Log, H256};
 use ethers_signers::LocalWallet;
 use foundry_common::{
@@ -85,6 +86,101 @@ pub struct Executor {
     gas_limit: U256,
 }
 
+impl EvmExecutor for Box<Executor> {
+    fn create_fork(
+        &mut self,
+        fork: foundry_evm_core::fork::CreateFork,
+    ) -> eyre::Result<foundry_evm_core::backend::LocalForkId> {
+        EvmExecutor::create_fork(self.as_mut(), fork)
+    }
+
+    fn select_fork(
+        &mut self,
+        id: foundry_evm_core::backend::LocalForkId,
+        env: &mut Env,
+        journaled_state: &mut revm::JournaledState,
+    ) -> eyre::Result<()> {
+        EvmExecutor::select_fork(self.as_mut(), id, env, journaled_state)
+    }
+
+    fn call_evm(
+        &mut self,
+        from: Address,
+        to: Address,
+        calldata: Bytes,
+        value: U256,
+    ) -> eyre::Result<EvmRawCallResult> {
+        EvmExecutor::call_evm(self.as_mut(), from, to, calldata, value)
+    }
+}
+
+impl EvmExecutor for Executor {
+    fn create_fork(
+        &mut self,
+        fork: foundry_evm_core::fork::CreateFork,
+    ) -> eyre::Result<foundry_evm_core::backend::LocalForkId> {
+        self.backend.create_fork(fork)
+    }
+
+    fn select_fork(
+        &mut self,
+        id: foundry_evm_core::backend::LocalForkId,
+        env: &mut Env,
+        journaled_state: &mut revm::JournaledState,
+    ) -> eyre::Result<()> {
+        self.backend.select_fork(id, env, journaled_state)
+    }
+
+    fn call_evm(
+        &mut self,
+        from: Address,
+        to: Address,
+        calldata: Bytes,
+        value: U256,
+    ) -> eyre::Result<EvmRawCallResult> {
+        self.call_raw_committing(from, to, calldata, value).map(
+            |RawCallResult {
+                 exit_reason,
+                 reverted,
+                 has_snapshot_failure,
+                 result,
+                 gas_used,
+                 gas_refunded,
+                 stipend,
+                 logs,
+                 labels,
+                 traces: _,
+                 coverage: _,
+                 debug: _,
+                 transactions,
+                 state_changeset,
+                 script_wallets,
+                 env,
+                 cheatcodes,
+                 out,
+                 chisel_state,
+             }| EvmRawCallResult {
+                exit_reason,
+                reverted,
+                has_snapshot_failure,
+                result,
+                gas_used,
+                gas_refunded,
+                stipend,
+                logs,
+                labels,
+                transactions,
+                state_changeset,
+                script_wallets,
+                env,
+                cheatcodes,
+                out,
+                chisel_state,
+            },
+        )
+    }
+}
+
 impl Executor {
     #[inline]
     pub fn new(
@@ -140,7 +236,9 @@ impl Executor {
             H256::from_low_u64_be(1),
         );
 
-        Executor { backend, env, inspector, gas_limit }
+        let mut executor = Executor { backend, env, inspector, gas_limit };
+        executor.inspector.evm_executor = Some(Box::new(executor.clone()));
+        executor
     }
 
     /// Creates the default CREATE2 Contract Deployer for local tests and scripts.

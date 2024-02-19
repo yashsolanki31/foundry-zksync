@@ -1,8 +1,11 @@
+use crate::executors::Executor;
+
 use super::{
     Cheatcodes, CheatsConfig, ChiselState, CoverageCollector, Debugger, Fuzzer, LogCollector,
     TracePrinter, Tracer,
 };
 use alloy_primitives::{Address, Bytes, B256, U256};
+use era_multivm::{CheatcodeData, CheatcodeDataProvider};
 use ethers_core::types::Log;
 use ethers_signers::LocalWallet;
 use foundry_common::{AsTracerPointer, StorageModificationRecorder, StorageModifications};
@@ -211,6 +214,7 @@ pub struct InspectorStack {
     pub printer: Option<TracePrinter>,
     pub tracer: Option<Tracer>,
     pub storage_modifications: StorageModifications,
+    pub evm_executor: Option<Box<Executor>>,
 }
 
 impl InspectorStack {
@@ -578,7 +582,7 @@ use era_cheatcodes::cheatcodes::CheatcodeTracer;
 use foundry_evm_core::era_revm::db::RevmDatabaseForEra;
 use multivm::vm_latest::{HistoryDisabled, ToTracerPointer};
 
-impl<DB: DatabaseExt + Send> AsTracerPointer<StorageView<RevmDatabaseForEra<DB>>, HistoryDisabled>
+impl<DB: DatabaseExt + revm::DatabaseCommit + Send> AsTracerPointer<StorageView<RevmDatabaseForEra<DB>>, HistoryDisabled>
     for &mut InspectorStack
 {
     fn as_tracer_pointer(
@@ -593,6 +597,7 @@ impl<DB: DatabaseExt + Send> AsTracerPointer<StorageView<RevmDatabaseForEra<DB>>
                 .as_ref()
                 .map(|c| c.broadcastable_transactions.clone())
                 .unwrap_or_default(),
+            self.evm_executor.clone().unwrap(),
         )
         .into_tracer_pointer()
     }
@@ -605,5 +610,19 @@ impl StorageModificationRecorder for &mut InspectorStack {
 
     fn get_storage_modifications(&self) -> &StorageModifications {
         &self.storage_modifications
+    }
+}
+
+impl CheatcodeDataProvider for &mut InspectorStack {
+    fn get(&self) -> era_multivm::CheatcodeData {
+        CheatcodeData {
+            cheatcodes_config: self.cheatcodes.as_ref().map(|c| c.config.clone()).unwrap_or_default(),
+            storage_modifications: self.storage_modifications.clone(),
+            //TODO: dedicated InspectorStack field
+            broadcastable_transactions: self.cheatcodes
+                .as_ref()
+                .map(|c| c.broadcastable_transactions.clone())
+                .unwrap_or_default(),
+        }
     }
 }

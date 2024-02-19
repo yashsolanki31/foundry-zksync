@@ -72,6 +72,8 @@ const GLOBAL_FAILURE_SLOT: B256 =
 /// An extension trait that allows us to easily extend the `revm::Inspector` capabilities
 #[auto_impl::auto_impl(&mut, Box)]
 pub trait DatabaseExt: Database<Error = DatabaseError> {
+    fn call_evm(&mut self, env: Env) -> eyre::Result<ResultAndState>;
+
     /// Creates a new snapshot at the current point of execution.
     ///
     /// A snapshot is associated with a new unique id that's created for the snapshot.
@@ -910,6 +912,17 @@ impl Backend {
 // === impl a bunch of `revm::Database` adjacent implementations ===
 
 impl DatabaseExt for Backend {
+    fn call_evm(&mut self, mut env: Env) -> eyre::Result<ResultAndState> {
+        let mut db = self.clone();
+        db.initialize(&env);
+        let result = match revm::evm_inner::<Self>(&mut env, &mut db, None).transact() {
+            Ok(res) => Ok(res),
+            Err(e) => eyre::bail!("backend: failed while inspecting: {e}"),
+        };
+
+        result
+    }
+
     fn snapshot(&mut self, journaled_state: &JournaledState, env: &Env) -> U256 {
         trace!("create snapshot");
         let id = self.inner.snapshots.insert(BackendSnapshot::new(

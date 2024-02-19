@@ -23,6 +23,7 @@ members = [
     "crates/macros/",
     "crates/test-utils/",
     "crates/era-cheatcodes/",
+    "crates/era-multivm/",
     "crates/zkcast",
     "crates/zkforge",
 ]
@@ -128,6 +129,7 @@ foundry-evm-traces = { path = "crates/evm/traces" }
 foundry-macros = { path = "crates/macros" }
 foundry-test-utils = { path = "crates/test-utils" }
 era_cheatcodes = { path = "crates/era-cheatcodes" }
+era-multivm = { path = "crates/era-multivm" }
 
 foundry-block-explorers = { version = "0.1.2", default-features = false }
 
