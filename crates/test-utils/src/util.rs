@@ -354,13 +354,14 @@ pub fn try_setup_forge_remote(
     config: impl Into<RemoteProject>,
 ) -> Result<(TestProject, TestCommand)> {
     let config = config.into();
+    println!("{:?}", config);
     let mut tmp = TempProject::checkout(&config.id).wrap_err("failed to checkout project")?;
     tmp.project_mut().paths = config.path_style.paths(tmp.root())?;
 
     let prj = TestProject::with_project(tmp);
     if config.run_build {
-        let mut cmd = prj.forge_command();
-        cmd.arg("build");
+        let mut cmd: TestCommand = prj.forge_command();
+        cmd.arg("build").arg("--zksync");
         cmd.ensure_execute_success().wrap_err("`forge build` unsuccessful")?;
     }
     for addon in config.run_commands {

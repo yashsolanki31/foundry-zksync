@@ -10,3 +10,6 @@
 [submodule "zk-tests/lib/openzeppelin-contracts"]
 	path = zk-tests/lib/openzeppelin-contracts
 	url = https://github.com/Openzeppelin/openzeppelin-contracts
+[submodule "zk-tests/lib/aave-delivery-infrastrucute"]
+	path = zk-test/lib/aave-delivery-infrastrucute
+	url = https://github.com/Moonsong-Labs/aave-delivery-infrastructure

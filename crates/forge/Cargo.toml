@@ -109,5 +109,5 @@ openssl = ["foundry-cli/openssl", "reqwest/default-tls", "foundry-wallets/openss
 asm-keccak = ["alloy-primitives/asm-keccak"]
 
 [[bench]]
-name = "test"
+name = "test_crit"
 harness = false
