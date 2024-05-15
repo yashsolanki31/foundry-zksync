@@ -349,12 +349,25 @@ pub fn setup_forge_remote(prj: impl Into<RemoteProject>) -> (TestProject, TestCo
     try_setup_forge_remote(prj).unwrap()
 }
 
+pub fn check_out_forge_remote(prj: impl Into<RemoteProject>) -> TestProject {
+    try_checkout_forge_remote(prj).unwrap()
+}
+
+pub fn try_checkout_forge_remote(
+    config: impl Into<RemoteProject>,
+) -> Result<TestProject> {
+    let config = config.into();
+    let mut tmp = TempProject::checkout(&config.id).wrap_err("failed to checkout project")?;
+    tmp.project_mut().paths = config.path_style.paths(tmp.root())?;
+
+    Ok(TestProject::with_project(tmp))
+}
+
 /// Same as `setup_forge_remote` but not panicking
 pub fn try_setup_forge_remote(
     config: impl Into<RemoteProject>,
 ) -> Result<(TestProject, TestCommand)> {
     let config = config.into();
-    println!("{:?}", config);
     let mut tmp = TempProject::checkout(&config.id).wrap_err("failed to checkout project")?;
     tmp.project_mut().paths = config.path_style.paths(tmp.root())?;
 
