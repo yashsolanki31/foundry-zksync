@@ -404,8 +404,8 @@ where
     for (k, v) in &modified_storage {
         let address = k.address().to_address();
         let index = k.key().to_ru256();
-        let account = era_db.load_account(address);
-        let previous = account.storage.get(&index).map(|v| v.present_value).unwrap_or_default();
+        era_db.load_account(address);
+        let previous = era_db.sload(address, index);
         let entry = storage.entry(address).or_default();
         entry.insert(index, StorageSlot::new_changed(previous, v.to_ru256()));
 
@@ -535,9 +535,10 @@ fn inspect_inner<S: ReadStorage + Send>(
     }
 
     let resolve_hashes = get_env_var::<bool>("ZK_DEBUG_RESOLVE_HASHES");
+    let show_outputs = get_env_var::<bool>("ZK_DEBUG_SHOW_OUTPUTS");
     tracing::info!("=== Calls: ");
     for call in call_traces.iter() {
-        formatter::print_call(call, 0, &ShowCalls::All, resolve_hashes, true);
+        formatter::print_call(call, 0, &ShowCalls::All, show_outputs, resolve_hashes);
     }
 
     tracing::info!("==== {}", format!("{} events", tx_result.logs.events.len()));
