@@ -18,7 +18,7 @@ To use for zkSync environments, include `--zksync` when running `forge` or `vm.z
 3. **Transaction Handling:**
    - `CALL` and `CREATE` operations are captured and converted to zkSync transactions. This process includes fetching zkSync-equivalent bytecode, managing account nonces, and marking EOA appropriately to comply with zkSync requirements.
 4. **Execution and State Management:**
-   - zkSync VM processes the transaction and returns state changes, which are applied to `journaled_state`. Results are relayed back.
+   - zkSync VM processes the transaction and returns state changes, which are applied to `journalled_state`. Results are relayed back.
 5. **Logging:**
    - `console.log()` outputs within zkSync VM are captured and displayed in Foundry.
    - `ZK_DEBUG_RESOLVE_HASHES` and `ZK_DEBUG_SHOW_OUTPUTS` env variable may be set to `true` to display zkSync VM call logs with resolved selector hashes (requires Internet connection), and the call outputs, respectively.
@@ -45,7 +45,7 @@ To use for zkSync environments, include `--zksync` when running `forge` or `vm.z
 
 While `foundry-zksync` is **alpha stage**, there are some limitations to be aware of:
 
-- **Compile Time**: Some users may experience slower compile times.
+- **Compile Time**:Users on lower-end hardware may experience slower compile times.
 - **Compiling Libraries**: Compiling non-inlinable libraries requires deployment and adding to configuration. For more information please refer to [official docs](https://era.zksync.io/docs/tools/hardhat/compiling-libraries.html).
 
     ```
